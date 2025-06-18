@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="layout/layout :: layout (~{::body}, ~{::title})">
+
+<head>
+  <title>Raw Material Estimates</title>
+</head>
+
+<body>
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3>Raw Material Estimates</h3>
+    <a th:href="@{/estimates/new}" class="btn btn-success">➕ Add Estimate</a>
+  </div>
+
+  <form class="row mb-3" method="get" th:action="@{/estimates}">
+    <div class="col-md-4">
+      <input type="text" name="keyword" th:value="${keyword}" class="form-control"
+             placeholder="Search by remarks or quantity..."/>
+    </div>
+    <div class="col-md-4">
+      <select name="cycleId" class="form-select">
+        <option value="">All Cycles</option>
+        <option th:each="c : ${cycles}"
+                th:value="${c.id}"
+                th:text="${c.code}"
+                th:selected="${c.id == cycleId}">
+        </option>
+      </select>
+    </div>
+    <div class="col-md-4">
+      <button class="btn btn-primary">🔍 Filter</button>
+    </div>
+  </form>
+
+  <table class="table table-bordered table-striped">
+    <thead class="table-light">
+    <tr>
+      <th>Cycle</th>
+      <th>Bags</th>
+      <th>Spawn/Bag</th>
+      <th>Substrate/Bag</th>
+      <th>Packaging/Bag</th>
+      <th>Total Spawn</th>
+      <th>Total Substrate</th>
+      <th>Total Packaging</th>
+      <th>Remarks</th>
+      <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="e : ${estimates.content}">
+      <td th:text="${e.cycle.code}">Cycle</td>
+      <td th:text="${e.numberOfBags}">0</td>
+      <td th:text="${e.spawnPerBag}">0.0</td>
+      <td th:text="${e.substratePerBag}">0.0</td>
+      <td th:text="${e.packagingPerBag}">0</td>
+      <td th:text="${e.totalSpawn}">0.0</td>
+      <td th:text="${e.totalSubstrate}">0.0</td>
+      <td th:text="${e.totalPackaging}">0</td>
+      <td th:text="${e.remarks}">Remarks</td>
+      <td>
+        <a th:href="@{/estimates/edit/{id}(id=${e.id})}" class="btn btn-sm btn-primary">✏️ Edit</a>
+        <a th:href="@{/estimates/delete/{id}(id=${e.id})}" class="btn btn-sm btn-danger"
+           onclick="return confirm('Delete this estimate?')">🗑️ Delete</a>
+      </td>
+    </tr>
+    <tr th:if="${estimates.totalElements == 0}">
+      <td colspan="10" class="text-center">No estimates found.</td>
+    </tr>
+    </tbody>
+  </table>
+
+  <!-- Pagination -->
+  <nav>
+    <ul class="pagination">
+      <li class="page-item" th:classappend="${estimates.first} ? 'disabled'">
+        <a class="page-link"
+           th:href="@{'/estimates'(page=${estimates.number - 1}, keyword=${keyword}, cycleId=${cycleId})}">Previous</a>
+      </li>
+      <li class="page-item disabled">
+        <span class="page-link">
+          Page <span th:text="${estimates.number + 1}">1</span> of
+          <span th:text="${estimates.totalPages}">1</span>
+        </span>
+      </li>
+      <li class="page-item" th:classappend="${estimates.last} ? 'disabled'">
+        <a class="page-link"
+           th:href="@{'/estimates'(page=${estimates.number + 1}, keyword=${keyword}, cycleId=${cycleId})}">Next</a>
+      </li>
+    </ul>
+  </nav>
+</div>
+</body>
+</html>

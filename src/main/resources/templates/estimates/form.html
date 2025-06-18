@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="layout/layout :: layout (~{::body}, ~{::title})">
+
+<head>
+  <title th:text="${#strings.isEmpty(estimate.id) ? 'Add Estimate' : 'Edit Estimate'}">Estimate Form</title>
+</head>
+
+<body>
+<div class="card">
+  <div class="card-header bg-success text-white">
+    <h4 th:text="${#strings.isEmpty(estimate.id) ? 'Add Raw‑Material Estimate'
+                                                 : 'Edit Raw‑Material Estimate'}">Estimate</h4>
+  </div>
+
+  <div class="card-body">
+    <form th:action="@{/estimates/save}" th:object="${estimate}" method="post">
+      <input type="hidden" th:field="*{id}"/>
+
+      <!-- Production Cycle -->
+      <div class="mb-3">
+        <label class="form-label">Production Cycle</label>
+        <select th:field="*{cycle}" class="form-select" required>
+          <option value="" disabled>Select Cycle</option>
+          <option th:each="c : ${cycles}" th:value="${c.id}" th:text="${c.code}"></option>
+        </select>
+      </div>
+
+      <!-- Bag & per‑bag inputs -->
+      <div class="row mb-3">
+        <div class="col-md-3">
+          <label class="form-label">Number&nbsp;of&nbsp;Bags</label>
+          <input type="number" min="1" th:field="*{numberOfBags}" id="bags"
+                 class="form-control" oninput="recalc()" required/>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Spawn / Bag&nbsp;(kg)</label>
+          <input type="number" step="0.01" min="0" th:field="*{spawnPerBag}" id="spawnBag"
+                 class="form-control" oninput="recalc()" required/>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Substrate / Bag&nbsp;(kg)</label>
+          <input type="number" step="0.01" min="0" th:field="*{substratePerBag}" id="subBag"
+                 class="form-control" oninput="recalc()" required/>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Packaging / Bag&nbsp;(pcs)</label>
+          <input type="number" min="0" th:field="*{packagingPerBag}" id="packBag"
+                 class="form-control" oninput="recalc()" required/>
+        </div>
+      </div>
+
+      <!-- Auto‑calculated totals -->
+      <div class="row mb-3">
+        <div class="col-md-4">
+          <label class="form-label">Total Spawn&nbsp;(kg)</label>
+          <input type="number" step="0.01" th:field="*{totalSpawn}" id="totSpawn"
+                 class="form-control" readonly/>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Total Substrate&nbsp;(kg)</label>
+          <input type="number" step="0.01" th:field="*{totalSubstrate}" id="totSub"
+                 class="form-control" readonly/>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Total Packaging&nbsp;(pcs)</label>
+          <input type="number" th:field="*{totalPackaging}" id="totPack"
+                 class="form-control" readonly/>
+        </div>
+      </div>
+
+      <!-- Remarks -->
+      <div class="mb-3">
+        <label class="form-label">Remarks</label>
+        <textarea th:field="*{remarks}" class="form-control" rows="2"></textarea>
+      </div>
+
+      <!-- Actions -->
+      <div class="d-flex justify-content-between">
+        <a th:href="@{/estimates}" class="btn btn-secondary">← Back</a>
+        <button type="submit" class="btn btn-success">💾 Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ───────────────────── JS ────────────────────── -->
+<script>
+  function recalc() {
+    const bags   = parseFloat(document.getElementById('bags').value)      || 0;
+    const spawn  = parseFloat(document.getElementById('spawnBag').value)  || 0;
+    const sub    = parseFloat(document.getElementById('subBag').value)    || 0;
+    const pack   = parseFloat(document.getElementById('packBag').value)   || 0;
+
+    document.getElementById('totSpawn').value = (bags * spawn).toFixed(2);
+    document.getElementById('totSub').value   = (bags * sub).toFixed(2);
+    document.getElementById('totPack').value  = Math.round(bags * pack);
+  }
+
+  // Recalculate once on page load (important for edit mode)
+  window.addEventListener('DOMContentLoaded', recalc);
+</script>
+</body>
+</html>
