@@ -2,7 +2,10 @@ package in.mariasorganics.inventorytracker.service.specs;
 
 import in.mariasorganics.inventorytracker.entity.InventoryItem;
 import in.mariasorganics.inventorytracker.enums.UnitOfMeasurement;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
+
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDate;
@@ -51,7 +54,15 @@ public class InventoryItemSpecifications {
     }
 
     public static Specification<InventoryItem> hasPreferredSupplier(Long supplierId) {
-        return (root, query, cb) ->
-                supplierId == null ? null : cb.equal(root.get("preferredSupplier").get("id"), supplierId);
-    }
+    return (root, query, cb) -> {
+        if (supplierId == null) return null;
+
+        Join<Object, Object> mappingJoin = root.join("supplierMappings", JoinType.LEFT);
+        Predicate supplierMatch = cb.equal(mappingJoin.get("supplier").get("id"), supplierId);
+        Predicate isPreferred = cb.isTrue(mappingJoin.get("preferred"));
+
+        return cb.and(supplierMatch, isPreferred);
+    };
+}
+
 }

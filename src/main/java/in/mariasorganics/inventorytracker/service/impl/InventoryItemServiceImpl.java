@@ -17,6 +17,18 @@ public class InventoryItemServiceImpl implements IInventoryItemService {
 
     private final InventoryItemRepository repository;
 
+    /**
+     * Returns a paginated, filtered list of inventory items.
+     *
+     * @param keyword               full‑text search (name / remarks)
+     * @param unit                  filter by unit of measurement
+     * @param lowStockOnly          flag → show only items below minimum‑stock level
+     * @param expiredOnly           flag → show only expired items
+     * @param expiringSoon          flag → show items that will expire within N days
+     * @param expiringThresholdDays N days used with {@code expiringSoon}
+     * @param preferredSupplierId   filter by preferred supplier (in SupplierMapping)
+     * @param pageable              page + size + sort
+     */
     @Override
     public Page<InventoryItem> findAll(
             String keyword,
@@ -25,7 +37,7 @@ public class InventoryItemServiceImpl implements IInventoryItemService {
             Boolean expiredOnly,
             Boolean expiringSoon,
             int expiringThresholdDays,
-            Long preferredSupplierId, // New param
+            Long preferredSupplierId,
             Pageable pageable) {
 
         Specification<InventoryItem> spec = Specification
@@ -34,10 +46,12 @@ public class InventoryItemServiceImpl implements IInventoryItemService {
                 .and(InventoryItemSpecifications.isLowStock(lowStockOnly))
                 .and(InventoryItemSpecifications.isExpired(expiredOnly))
                 .and(InventoryItemSpecifications.isExpiringSoon(expiringSoon, expiringThresholdDays))
-                .and(InventoryItemSpecifications.hasPreferredSupplier(preferredSupplierId)); // New filter
+                .and(InventoryItemSpecifications.hasPreferredSupplier(preferredSupplierId)); // NEW
 
         return repository.findAll(spec, pageable);
     }
+
+    /* --------------------------------------------------------------------- */
 
     @Override
     public InventoryItem getById(Long id) {

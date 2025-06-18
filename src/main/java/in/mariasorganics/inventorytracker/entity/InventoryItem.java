@@ -3,6 +3,7 @@ package in.mariasorganics.inventorytracker.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
+import java.util.List;
 
 import in.mariasorganics.inventorytracker.enums.UnitOfMeasurement;
 
@@ -32,9 +33,8 @@ public class InventoryItem {
     private String remarks;
 
     /** Optional preferred supplier */
-    @ManyToOne
-    @JoinColumn(name = "preferred_supplier_id")
-    private Supplier preferredSupplier;
+    @OneToMany(mappedBy = "item")
+    private List<SupplierMapping> supplierMappings;
 
     /* --- Derived Properties --- */
 
@@ -52,7 +52,7 @@ public class InventoryItem {
     @Transient
     public boolean isExpiringSoon(int thresholdDays) {
         return expiryDate != null &&
-               !isExpired() &&
-               expiryDate.isBefore(LocalDate.now().plusDays(thresholdDays));
+                !isExpired() &&
+                expiryDate.isBefore(LocalDate.now().plusDays(thresholdDays));
     }
 }

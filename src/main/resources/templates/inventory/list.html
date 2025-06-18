@@ -1,143 +1,234 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      th:replace="layout/layout :: layout (~{::body}, ~{::title})">
-<head>
-  <title>Inventory</title>
-</head>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="layout/layout :: layout (~{::body}, ~{::title})"
+>
+  <head>
+    <title>Inventory</title>
+  </head>
 
-<body>
-<div class="container mt-4">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>🏬 Inventory Manager</h2>
-    <a class="btn btn-success" th:href="@{/inventory/new}">➕ Add Item</a>
-  </div>
-
-  <!-- ▸ FILTERS (collapsible) -->
-  <button class="btn btn-outline-secondary mb-3" data-bs-toggle="collapse" data-bs-target="#advFilters">
-    🔍 Advanced Filters
-  </button>
-
-  <div id="advFilters" class="collapse">
-    <form method="get" th:action="@{/inventory}" class="card card-body shadow-sm mb-4">
-      <div class="row g-3 align-items-end">
-        <!-- Keyword -->
-        <div class="col-md-3">
-          <label class="form-label">Keyword</label>
-          <input type="text" name="keyword" th:value="${keyword}" class="form-control" placeholder="Name / remarks"/>
-        </div>
-
-        <!-- Unit -->
-        <div class="col-md-2">
-          <label class="form-label">Unit</label>
-          <select name="unit" class="form-select">
-            <option value="">All</option>
-            <option th:each="u : ${unitOptions}" th:value="${u}" th:text="${u}" th:selected="${u == unit}"></option>
-          </select>
-        </div>
-
-        <!-- Supplier -->
-        <div class="col-md-3">
-          <label class="form-label">Preferred Supplier</label>
-          <select name="supplierId" class="form-select">
-            <option value="">All</option>
-            <option th:each="s : ${suppliers}" th:value="${s.id}" th:text="${s.name}" th:selected="${supplierId == s.id}"></option>
-          </select>
-        </div>
-
-        <!-- Low stock -->
-        <div class="col-md-1 form-check mt-4">
-          <input class="form-check-input" type="checkbox" name="lowStock" th:checked="${lowStock}"/>
-          <label class="form-check-label">Low Stock</label>
-        </div>
-
-        <!-- Expired -->
-        <div class="col-md-1 form-check mt-4">
-          <input class="form-check-input" type="checkbox" name="expired" th:checked="${expired}"/>
-          <label class="form-check-label">Expired</label>
-        </div>
-
-        <!-- Expiring soon -->
-        <div class="col-md-2">
-          <label class="form-label">Expiring ≤ (days)</label>
-          <div class="input-group">
-            <input type="number" name="threshold" min="1" th:value="${threshold}" class="form-control"/>
-            <span class="input-group-text p-0">
-              <input class="form-check-input ms-2" type="checkbox" name="expSoon" th:checked="${expSoon}"/>
-            </span>
-          </div>
-        </div>
-
-        <!-- Submit -->
-        <div class="col-md-2">
-          <button class="btn btn-primary w-100">Apply</button>
-        </div>
+  <body>
+    <div class="container mt-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>🏬 Inventory Manager</h2>
+        <a class="btn btn-success" th:href="@{/inventory/new}">➕ Add Item</a>
       </div>
-    </form>
-  </div>
 
-  <!-- ▸ TABLE -->
-  <table class="table table-bordered table-striped">
-    <thead class="table-light">
-    <tr>
-      <th>Name</th>
-      <th>Qty</th>
-      <th>Unit</th>
-      <th>Min Lvl</th>
-      <th>Expiry</th>
-      <th>Status</th>
-      <th>Supplier</th>
-      <th>Remarks</th>
-      <th>Actions</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="i : ${items.content}">
-      <td th:text="${i.name}">Name</td>
-      <td th:text="${#numbers.formatDecimal(i.quantity, 0, 2)}">0</td>
-      <td th:text="${i.unit}">kg</td>
-      <td th:text="${i.minimumStockLevel}">0</td>
-      <td th:text="${i.expiryDate != null ? #temporals.format(i.expiryDate,'dd-MM-yyyy') : '-'}"></td>
-      <td>
-        <span th:if="${i.isExpired()}" class="badge bg-danger">Expired</span>
-        <span th:if="${i.isExpiringSoon(30)}" class="badge bg-warning text-dark">Expiring</span>
-        <span th:if="${i.isLowStock()}" class="badge bg-secondary">Low</span>
-      </td>
-      <td th:text="${i.preferredSupplier != null ? i.preferredSupplier.name : '-'}">-</td>
-      <td th:text="${i.remarks}">-</td>
-      <td>
-        <a th:href="@{/inventory/edit/{id}(id=${i.id})}" class="btn btn-sm btn-primary">✏️</a>
-        <form th:action="@{/inventory/delete/{id}(id=${i.id})}" method="post" class="d-inline">
-          <button class="btn btn-sm btn-danger" onclick="return confirm('Delete this item?')">🗑️</button>
+      <!-- ▸ FILTERS (collapsible) -->
+      <button
+        class="btn btn-outline-secondary mb-3"
+        data-bs-toggle="collapse"
+        data-bs-target="#advFilters"
+      >
+        🔍 Advanced Filters
+      </button>
+
+      <div id="advFilters" class="collapse">
+        <form
+          method="get"
+          th:action="@{/inventory}"
+          class="card card-body shadow-sm mb-4"
+        >
+          <div class="row g-3 align-items-end">
+            <!-- Keyword -->
+            <div class="col-md-3">
+              <label class="form-label">Keyword</label>
+              <input
+                type="text"
+                name="keyword"
+                th:value="${keyword}"
+                class="form-control"
+                placeholder="Name / remarks"
+              />
+            </div>
+
+            <!-- Unit -->
+            <div class="col-md-2">
+              <label class="form-label">Unit</label>
+              <select name="unit" class="form-select">
+                <option value="">All</option>
+                <option
+                  th:each="u : ${unitOptions}"
+                  th:value="${u}"
+                  th:text="${u}"
+                  th:selected="${u == unit}"
+                ></option>
+              </select>
+            </div>
+
+            <!-- Supplier -->
+            <div class="col-md-3">
+              <label class="form-label">Preferred Supplier</label>
+              <select name="supplierId" class="form-select">
+                <option value="">All</option>
+                <option
+                  th:each="s : ${suppliers}"
+                  th:value="${s.id}"
+                  th:text="${s.name}"
+                  th:selected="${supplierId == s.id}"
+                ></option>
+              </select>
+            </div>
+
+            <!-- Low stock -->
+            <div class="col-md-1 form-check mt-4">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                name="lowStock"
+                th:checked="${lowStock}"
+              />
+              <label class="form-check-label">Low Stock</label>
+            </div>
+
+            <!-- Expired -->
+            <div class="col-md-1 form-check mt-4">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                name="expired"
+                th:checked="${expired}"
+              />
+              <label class="form-check-label">Expired</label>
+            </div>
+
+            <!-- Expiring soon -->
+            <div class="col-md-2">
+              <label class="form-label">Expiring ≤ (days)</label>
+              <div class="input-group">
+                <input
+                  type="number"
+                  name="threshold"
+                  min="1"
+                  th:value="${threshold}"
+                  class="form-control"
+                />
+                <span class="input-group-text p-0">
+                  <input
+                    class="form-check-input ms-2"
+                    type="checkbox"
+                    name="expSoon"
+                    th:checked="${expSoon}"
+                  />
+                </span>
+              </div>
+            </div>
+
+            <!-- Submit -->
+            <div class="col-md-2">
+              <button class="btn btn-primary w-100">Apply</button>
+            </div>
+          </div>
         </form>
-      </td>
-    </tr>
-    <tr th:if="${items.totalElements == 0}">
-      <td colspan="9" class="text-center">No items found.</td>
-    </tr>
-    </tbody>
-  </table>
+      </div>
 
-  <!-- ▸ PAGINATION -->
-  <nav th:if="${items.totalPages > 1}">
-    <ul class="pagination">
-      <li class="page-item" th:classappend="${items.first} ? 'disabled'">
-        <a class="page-link"
-           th:href="@{/inventory(page=${items.number-1}, keyword=${keyword}, unit=${unit}, supplierId=${supplierId},
-           lowStock=${lowStock}, expired=${expired}, expSoon=${expSoon}, threshold=${threshold})}">Prev</a>
-      </li>
-      <li class="page-item disabled">
-        <span class="page-link">
-          Page <span th:text="${items.number+1}"></span> of
-          <span th:text="${items.totalPages}"></span>
-        </span>
-      </li>
-      <li class="page-item" th:classappend="${items.last} ? 'disabled'">
-        <a class="page-link"
-           th:href="@{/inventory(page=${items.number+1}, keyword=${keyword}, unit=${unit}, supplierId=${supplierId},
-           lowStock=${lowStock}, expired=${expired}, expSoon=${expSoon}, threshold=${threshold})}">Next</a>
-      </li>
-    </ul>
-  </nav>
-</div>
-</body>
+      <!-- ▸ TABLE -->
+      <table class="table table-bordered table-striped">
+        <thead class="table-light">
+          <tr>
+            <th>Name</th>
+            <th>Qty</th>
+            <th>Unit</th>
+            <th>Min Lvl</th>
+            <th>Expiry</th>
+            <th>Status</th>
+            <th>Supplier</th>
+            <th>Remarks</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="i : ${items.content}">
+            <td th:text="${i.name}">Name</td>
+            <td th:text="${#numbers.formatDecimal(i.quantity, 0, 2)}">0</td>
+            <td th:text="${i.unit}">kg</td>
+            <td th:text="${i.minimumStockLevel}">0</td>
+            <td
+              th:text="${i.expiryDate != null ? #temporals.format(i.expiryDate,'dd-MM-yyyy') : '-'}"
+            ></td>
+            <td>
+              <span th:if="${i.isExpired()}" class="badge bg-danger"
+                >Expired</span
+              >
+              <span
+                th:if="${i.isExpiringSoon(30)}"
+                class="badge bg-warning text-dark"
+                >Expiring</span
+              >
+              <span th:if="${i.isLowStock()}" class="badge bg-secondary"
+                >Low</span
+              >
+            </td>
+            <td>
+              <ul
+                class="mb-0 ps-3"
+                th:if="${i.supplierMappings != null and !i.supplierMappings.isEmpty()}"
+              >
+                <li
+                  th:each="map : ${i.supplierMappings}"
+                  th:text="${map.supplier.name}"
+                ></li>
+              </ul>
+              <span
+                th:if="${i.supplierMappings == null or i.supplierMappings.isEmpty()}"
+                >—</span
+              >
+            </td>
+
+            <td th:text="${i.remarks}">-</td>
+            <td>
+              <a
+                th:href="@{/inventory/edit/{id}(id=${i.id})}"
+                class="btn btn-sm btn-primary"
+                >✏️</a
+              >
+              <form
+                th:action="@{/inventory/delete/{id}(id=${i.id})}"
+                method="post"
+                class="d-inline"
+              >
+                <button
+                  class="btn btn-sm btn-danger"
+                  onclick="return confirm('Delete this item?')"
+                >
+                  🗑️
+                </button>
+              </form>
+            </td>
+          </tr>
+          <tr th:if="${items.totalElements == 0}">
+            <td colspan="9" class="text-center">No items found.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ▸ PAGINATION -->
+      <nav th:if="${items.totalPages > 1}">
+        <ul class="pagination">
+          <li class="page-item" th:classappend="${items.first} ? 'disabled'">
+            <a
+              class="page-link"
+              th:href="@{/inventory(page=${items.number-1}, keyword=${keyword}, unit=${unit}, supplierId=${supplierId},
+           lowStock=${lowStock}, expired=${expired}, expSoon=${expSoon}, threshold=${threshold})}"
+              >Prev</a
+            >
+          </li>
+          <li class="page-item disabled">
+            <span class="page-link">
+              Page <span th:text="${items.number+1}"></span> of
+              <span th:text="${items.totalPages}"></span>
+            </span>
+          </li>
+          <li class="page-item" th:classappend="${items.last} ? 'disabled'">
+            <a
+              class="page-link"
+              th:href="@{/inventory(page=${items.number+1}, keyword=${keyword}, unit=${unit}, supplierId=${supplierId},
+           lowStock=${lowStock}, expired=${expired}, expSoon=${expSoon}, threshold=${threshold})}"
+              >Next</a
+            >
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </body>
 </html>
