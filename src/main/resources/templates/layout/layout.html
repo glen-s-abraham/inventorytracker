@@ -66,6 +66,10 @@
               >
             </li>
 
+            <li class="nav-item">
+              <a class="nav-link" th:href="@{/inventory}">Inventory</a>
+            </li>
+
             <!-- Users (Admin Only) -->
             <li class="nav-item" sec:authorize="hasRole('ROLE_ADMIN')">
               <a class="nav-link" th:href="@{/users}">Users</a>
