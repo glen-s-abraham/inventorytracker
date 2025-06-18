@@ -31,6 +31,13 @@ public class InventoryItem {
 
     private String remarks;
 
+    /** Optional preferred supplier */
+    @ManyToOne
+    @JoinColumn(name = "preferred_supplier_id")
+    private Supplier preferredSupplier;
+
+    /* --- Derived Properties --- */
+
     @Transient
     public boolean isExpired() {
         return expiryDate != null && expiryDate.isBefore(LocalDate.now());
@@ -41,11 +48,11 @@ public class InventoryItem {
         return quantity <= minimumStockLevel;
     }
 
-    /** true when 0 < daysUntilExpiry ≤ threshold */
+    /** true when 0 < daysUntilExpiry ≤ threshold */
     @Transient
     public boolean isExpiringSoon(int thresholdDays) {
         return expiryDate != null &&
-                !isExpired() &&
-                expiryDate.isBefore(LocalDate.now().plusDays(thresholdDays));
+               !isExpired() &&
+               expiryDate.isBefore(LocalDate.now().plusDays(thresholdDays));
     }
 }

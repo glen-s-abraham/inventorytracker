@@ -28,7 +28,7 @@ public class InventoryItemSpecifications {
     public static Specification<InventoryItem> isLowStock(Boolean onlyLowStock) {
         return (root, query, cb) ->
                 Boolean.TRUE.equals(onlyLowStock)
-                        ? cb.lessThan(root.get("quantity"), root.get("minimumStock"))
+                        ? cb.lessThanOrEqualTo(root.get("quantity"), root.get("minimumStockLevel"))
                         : null;
     }
 
@@ -48,5 +48,10 @@ public class InventoryItemSpecifications {
             }
             return null;
         };
+    }
+
+    public static Specification<InventoryItem> hasPreferredSupplier(Long supplierId) {
+        return (root, query, cb) ->
+                supplierId == null ? null : cb.equal(root.get("preferredSupplier").get("id"), supplierId);
     }
 }

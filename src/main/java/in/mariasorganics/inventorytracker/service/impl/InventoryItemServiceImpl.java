@@ -25,17 +25,16 @@ public class InventoryItemServiceImpl implements IInventoryItemService {
             Boolean expiredOnly,
             Boolean expiringSoon,
             int expiringThresholdDays,
+            Long preferredSupplierId, // New param
             Pageable pageable) {
 
-        Specification<InventoryItem> spec = Specification.where(
-                InventoryItemSpecifications.hasKeyword(keyword)).and(
-                        InventoryItemSpecifications.hasUnit(unit))
-                .and(
-                        InventoryItemSpecifications.isLowStock(lowStockOnly))
-                .and(
-                        InventoryItemSpecifications.isExpired(expiredOnly))
-                .and(
-                        InventoryItemSpecifications.isExpiringSoon(expiringSoon, expiringThresholdDays));
+        Specification<InventoryItem> spec = Specification
+                .where(InventoryItemSpecifications.hasKeyword(keyword))
+                .and(InventoryItemSpecifications.hasUnit(unit))
+                .and(InventoryItemSpecifications.isLowStock(lowStockOnly))
+                .and(InventoryItemSpecifications.isExpired(expiredOnly))
+                .and(InventoryItemSpecifications.isExpiringSoon(expiringSoon, expiringThresholdDays))
+                .and(InventoryItemSpecifications.hasPreferredSupplier(preferredSupplierId)); // New filter
 
         return repository.findAll(spec, pageable);
     }

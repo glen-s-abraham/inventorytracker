@@ -13,6 +13,7 @@ public interface IInventoryItemService {
             Boolean expiredOnly,
             Boolean expiringSoon,
             int expiringThresholdDays,
+            Long preferredSupplierId, // New param
             Pageable pageable);
 
     InventoryItem getById(Long id);

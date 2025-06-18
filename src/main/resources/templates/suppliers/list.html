@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="layout/layout :: layout (~{::body}, ~{::title})">
+
+<head>
+  <title>Suppliers</title>
+</head>
+
+<body>
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>🔗 Supplier Manager</h2>
+    <a class="btn btn-success" th:href="@{/suppliers/new}">➕ Add Supplier</a>
+  </div>
+
+  <!-- Filters -->
+  <button class="btn btn-outline-secondary mb-3" data-bs-toggle="collapse" data-bs-target="#advFilters">
+    🔍 Advanced Filters
+  </button>
+
+  <div id="advFilters" class="collapse">
+    <form method="get" th:action="@{/suppliers}" class="card card-body shadow-sm mb-4">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-3">
+          <label class="form-label">Keyword</label>
+          <input type="text" name="keyword" th:value="${keyword}" class="form-control" placeholder="Name / Remarks" />
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Min Rating</label>
+          <input type="number" name="minRating" min="0" max="5" step="0.1" th:value="${minRating}" class="form-control" />
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Max Price/Unit</label>
+          <input type="number" name="maxPrice" min="0" th:value="${maxPrice}" class="form-control" />
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Max Lead Time (days)</label>
+          <input type="number" name="maxLeadTime" min="0" th:value="${maxLeadTime}" class="form-control" />
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-primary w-100">Apply</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Table -->
+  <table class="table table-bordered table-striped">
+    <thead class="table-light">
+      <tr>
+        <th>Name</th>
+        <th>Contact</th>
+        <th>Lead Time</th>
+        <th>MOQ</th>
+        <th>Price</th>
+        <th>Rating</th>
+        <th>Remarks</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr th:each="s : ${suppliers.content}">
+        <td th:text="${s.name}">Name</td>
+        <td th:text="${s.contactInfo}">Contact</td>
+        <td th:text="${s.averageLeadTimeInDays}">0</td>
+        <td th:text="${s.minimumOrderQuantity}">0</td>
+        <td th:text="${s.pricePerUnit}">0.0</td>
+        <td th:text="${s.rating}">0.0</td>
+        <td th:text="${s.remarks}">-</td>
+        <td>
+          <a th:href="@{/suppliers/edit/{id}(id=${s.id})}" class="btn btn-sm btn-primary">✏️</a>
+          <form th:action="@{/suppliers/delete/{id}(id=${s.id})}" method="post" class="d-inline">
+            <button class="btn btn-sm btn-danger" onclick="return confirm('Delete this supplier?')">🗑️</button>
+          </form>
+        </td>
+      </tr>
+      <tr th:if="${suppliers.totalElements == 0}">
+        <td colspan="8" class="text-center">No suppliers found.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Pagination -->
+  <nav th:if="${suppliers.totalPages > 1}">
+    <ul class="pagination">
+      <li class="page-item" th:classappend="${suppliers.first}? 'disabled'">
+        <a class="page-link"
+           th:href="@{/suppliers(page=${suppliers.number-1},
+                                keyword=${keyword},
+                                minRating=${minRating},
+                                maxPrice=${maxPrice},
+                                maxLeadTime=${maxLeadTime})}">
+          Prev
+        </a>
+      </li>
+      <li class="page-item disabled">
+        <span class="page-link">
+          Page <span th:text="${suppliers.number+1}"></span> of
+          <span th:text="${suppliers.totalPages}"></span>
+        </span>
+      </li>
+      <li class="page-item" th:classappend="${suppliers.last}? 'disabled'">
+        <a class="page-link"
+           th:href="@{/suppliers(page=${suppliers.number+1},
+                                keyword=${keyword},
+                                minRating=${minRating},
+                                maxPrice=${maxPrice},
+                                maxLeadTime=${maxLeadTime})}">
+          Next
+        </a>
+      </li>
+    </ul>
+  </nav>
+</div>
+</body>
+</html>

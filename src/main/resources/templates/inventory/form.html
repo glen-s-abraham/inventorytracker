@@ -1,99 +1,80 @@
 <!DOCTYPE html>
-<html
-  xmlns:th="http://www.thymeleaf.org"
-  th:replace="layout/layout :: layout (~{::body}, ~{::title})"
->
-  <head>
-    <title th:text="${#strings.isEmpty(item.id)? 'Add Item' : 'Edit Item'}">
-      Item
-    </title>
-  </head>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="layout/layout :: layout (~{::body}, ~{::title})">
 
-  <body>
-    <div class="card">
-      <div class="card-header bg-success text-white">
-        <h4
-          th:text="${#strings.isEmpty(item.id)? 'Add New Inventory Item' : 'Edit Inventory Item'}"
-        >
-          Item
-        </h4>
+<head>
+  <title th:text="${item.id == null ? 'Add Item' : 'Edit Item'}">Item</title>
+</head>
+
+<body>
+<div class="card">
+  <div class="card-header bg-success text-white">
+    <h4 th:text="${item.id == null ? 'Add New Inventory Item' : 'Edit Inventory Item'}">Item</h4>
+  </div>
+
+  <div class="card-body">
+    <form th:action="@{/inventory/save}" th:object="${item}" method="post">
+      <input type="hidden" th:field="*{id}"/>
+
+      <div class="row g-3">
+        <!-- Name ---------------------------------------------------------->
+        <div class="col-md-6">
+          <label class="form-label">Name</label>
+          <input type="text" th:field="*{name}" class="form-control" required/>
+        </div>
+
+        <!-- Quantity ------------------------------------------------------>
+        <div class="col-md-3">
+          <label class="form-label">Quantity</label>
+          <input type="number" step="0.01" th:field="*{quantity}" class="form-control" required/>
+        </div>
+
+        <!-- Unit ---------------------------------------------------------->
+        <div class="col-md-3">
+          <label class="form-label">Unit</label>
+          <select th:field="*{unit}" class="form-select" required>
+            <option th:each="u : ${unitOptions}" th:value="${u}" th:text="${u}"></option>
+          </select>
+        </div>
+
+        <!-- Min stock level ---------------------------------------------->
+        <div class="col-md-3">
+          <label class="form-label">Minimum Stock Level</label>
+          <input type="number" min="0" step="0.01" th:field="*{minimumStockLevel}" class="form-control" required/>
+        </div>
+
+        <!-- Expiry ------------------------------------------------------->
+        <div class="col-md-3">
+          <label class="form-label">Expiry Date (optional)</label>
+          <input type="date" th:field="*{expiryDate}" class="form-control"/>
+        </div>
+
+        <!-- Preferred supplier ------------------------------------------->
+        <div class="col-md-6">
+          <label class="form-label">Preferred Supplier</label>
+          <select th:field="*{preferredSupplier}" class="form-select">
+            <option value="" th:selected="${item.preferredSupplier == null}">— None —</option>
+            <option th:each="s : ${suppliers}"
+                    th:value="${s.id}"
+                    th:text="${s.name}"
+                    th:selected="${item.preferredSupplier?.id == s.id}">
+            </option>
+          </select>
+        </div>
+
+        <!-- Remarks ------------------------------------------------------>
+        <div class="col-12">
+          <label class="form-label">Remarks</label>
+          <textarea th:field="*{remarks}" class="form-control" rows="2"></textarea>
+        </div>
       </div>
 
-      <div class="card-body">
-        <form th:action="@{/inventory/save}" th:object="${item}" method="post">
-          <input type="hidden" th:field="*{id}" />
-
-          <div class="row g-3">
-            <div class="col-md-6">
-              <label class="form-label">Name</label>
-              <input
-                type="text"
-                th:field="*{name}"
-                class="form-control"
-                required
-              />
-            </div>
-
-            <div class="col-md-3">
-              <label class="form-label">Quantity</label>
-              <input
-                type="number"
-                step="0.01"
-                th:field="*{quantity}"
-                class="form-control"
-                required
-              />
-            </div>
-
-            <div class="col-md-3">
-              <label class="form-label">Unit</label>
-              <select th:field="*{unit}" class="form-select" required>
-                <option
-                  th:each="u : ${unitOptions}"
-                  th:value="${u}"
-                  th:text="${u}"
-                ></option>
-              </select>
-            </div>
-
-            <!-- Minimum stock level -->
-            <div class="mb-3">
-              <label class="form-label">Minimum Stock Level</label>
-              <input
-                type="number"
-                th:field="*{minimumStockLevel}"
-                min="0"
-                step="0.01"
-                class="form-control"
-                required
-              />
-            </div>
-
-            <div class="col-md-3">
-              <label class="form-label">Expiry Date (optional)</label>
-              <input
-                type="date"
-                th:field="*{expiryDate}"
-                class="form-control"
-              />
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label">Remarks</label>
-              <textarea
-                th:field="*{remarks}"
-                class="form-control"
-                rows="2"
-              ></textarea>
-            </div>
-          </div>
-
-          <div class="d-flex justify-content-between mt-4">
-            <a th:href="@{/inventory}" class="btn btn-secondary">← Back</a>
-            <button class="btn btn-success">💾 Save</button>
-          </div>
-        </form>
+      <div class="d-flex justify-content-between mt-4">
+        <a th:href="@{/inventory}" class="btn btn-secondary">← Back</a>
+        <button class="btn btn-success">💾 Save</button>
       </div>
-    </div>
-  </body>
+    </form>
+  </div>
+</div>
+</body>
 </html>
