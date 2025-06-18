@@ -90,7 +90,8 @@
                   th:each="s : ${suppliers}"
                   th:value="${s.id}"
                   th:text="${s.name}"
-                  th:selected="${item.supplierMappings.?[supplier.id == s.id].size() > 0}"
+                  th:selected="${item.supplierMappings != null
+                and #lists.contains(item.supplierMappings.![supplier.id], s.id)}"
                 ></option>
               </select>
             </div>
