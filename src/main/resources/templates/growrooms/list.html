@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="layout/layout :: layout (~{::body}, ~{::title})">
+
+<head>
+  <title>Grow Rooms</title>
+</head>
+
+<body>
+<div class="container mt-4">
+  <h2>Grow Room Manager</h2>
+
+  <a class="btn btn-success mb-3" th:href="@{/grow-rooms/new}">➕ Add New Grow Room</a>
+
+  <!-- Filter toggle -->
+  <button class="btn btn-outline-secondary mb-3" type="button" data-bs-toggle="collapse"
+          data-bs-target="#advancedGrowRoomFilters">
+    🔍 Advanced Filters
+  </button>
+
+  <!-- Collapsible filters -->
+  <div class="collapse" id="advancedGrowRoomFilters">
+    <div class="card card-body border-0 shadow-sm mb-4">
+      <form method="get" th:action="@{/grow-rooms}" class="row g-3 align-items-end">
+        <!-- Keyword -->
+        <div class="col-md-3 col-sm-6">
+          <label class="form-label">Search</label>
+          <input type="text" name="keyword" th:value="${keyword}" class="form-control"
+                 placeholder="Name / Notes">
+        </div>
+
+        <!-- Active filter -->
+        <div class="col-md-2 col-sm-6">
+          <label class="form-label">Active?</label>
+          <select name="active" class="form-select">
+            <option value="" th:selected="${active == null}">All</option>
+            <option value="true" th:selected="${active}">Yes</option>
+            <option value="false" th:selected="${active == false}">No</option>
+          </select>
+        </div>
+
+        <!-- Sort field -->
+        <div class="col-md-2 col-sm-6">
+          <label class="form-label">Sort By</label>
+          <select name="sortField" class="form-select">
+            <option value="name" th:selected="${sortField == 'name'}">Name</option>
+            <option value="defaultCycleIntervalDays" th:selected="${sortField == 'defaultCycleIntervalDays'}">
+              Interval (Days)
+            </option>
+            <option value="active" th:selected="${sortField == 'active'}">Active</option>
+          </select>
+        </div>
+
+        <!-- Sort dir -->
+        <div class="col-md-1 col-sm-6">
+          <label class="form-label">Order</label>
+          <select name="sortDir" class="form-select">
+            <option value="asc" th:selected="${sortDir == 'asc'}">Asc</option>
+            <option value="desc" th:selected="${sortDir == 'desc'}">Desc</option>
+          </select>
+        </div>
+
+        <!-- Submit -->
+        <div class="col-md-2 col-sm-12">
+          <button type="submit" class="btn btn-primary w-100 mt-2">Filter</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <table class="table table-bordered table-striped">
+    <thead class="table-light">
+    <tr>
+      <th>ID</th>
+      <th>Name</th>
+      <th>Active</th>
+      <th>Default Interval (Days)</th>
+      <th>Notes</th>
+      <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="room : ${growRoomPage.content}">
+      <td th:text="${room.id}"></td>
+      <td th:text="${room.name}"></td>
+      <td>
+        <span th:text="${room.active} ? 'Yes' : 'No'"></span>
+      </td>
+      <td th:text="${room.defaultCycleIntervalDays}"></td>
+      <td th:text="${room.notes}"></td>
+      <td>
+        <a th:href="@{/grow-rooms/edit/{id}(id=${room.id})}" class="btn btn-sm btn-primary">Edit</a>
+        <form th:action="@{/grow-rooms/delete/{id}(id=${room.id})}" method="post" style="display:inline">
+          <button class="btn btn-sm btn-danger"
+                  onclick="return confirm('Delete this grow room?')">Delete</button>
+        </form>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+
+  <!-- Pagination -->
+  <nav>
+    <ul class="pagination">
+      <li class="page-item" th:classappend="${growRoomPage.first} ? 'disabled'">
+        <a class="page-link"
+           th:href="@{'/grow-rooms'(page=${growRoomPage.number-1},size=${growRoomPage.size})}">Previous</a>
+      </li>
+      <li class="page-item disabled">
+        <span class="page-link">
+          Page <span th:text="${growRoomPage.number+1}"></span> of
+          <span th:text="${growRoomPage.totalPages}"></span>
+        </span>
+      </li>
+      <li class="page-item" th:classappend="${growRoomPage.last} ? 'disabled'">
+        <a class="page-link"
+           th:href="@{'/grow-rooms'(page=${growRoomPage.number+1},size=${growRoomPage.size})}">Next</a>
+      </li>
+    </ul>
+  </nav>
+</div>
+</body>
+</html>

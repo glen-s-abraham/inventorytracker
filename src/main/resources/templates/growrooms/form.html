@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="layout/layout :: layout (~{::body}, ~{::title})">
+
+<body>
+<div class="card">
+  <div class="card-header bg-success text-white">
+    <h4 th:text="${#strings.isEmpty(growRoom.id) ? 'Add New Grow Room' : 'Edit Grow Room'}">Grow Room Form</h4>
+  </div>
+  <div class="card-body">
+    <form th:action="@{/grow-rooms/save}" th:object="${growRoom}" method="post">
+      <input type="hidden" th:field="*{id}"/>
+
+      <!-- Name -->
+      <div class="mb-3">
+        <label class="form-label">Name</label>
+        <input type="text" th:field="*{name}" class="form-control" placeholder="Room A" required/>
+      </div>
+
+      <!-- Active -->
+      <div class="mb-3 form-check">
+        <input type="checkbox" th:field="*{active}" class="form-check-input" id="activeChk"/>
+        <label class="form-check-label" for="activeChk">Active</label>
+      </div>
+
+      <!-- Default Interval -->
+      <div class="mb-3">
+        <label class="form-label">Default Cycle Interval (Days)</label>
+        <input type="number" th:field="*{defaultCycleIntervalDays}" class="form-control" min="1" required/>
+      </div>
+
+      <!-- Notes -->
+      <div class="mb-3">
+        <label class="form-label">Notes</label>
+        <textarea th:field="*{notes}" class="form-control" rows="2"></textarea>
+      </div>
+
+      <div class="d-flex justify-content-between">
+        <a th:href="@{/grow-rooms}" class="btn btn-secondary">← Back</a>
+        <button type="submit" class="btn btn-success">💾 Save Room</button>
+      </div>
+    </form>
+  </div>
+</div>
+</body>
+</html>

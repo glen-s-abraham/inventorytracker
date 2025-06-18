@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="layout/layout :: layout (~{::body}, ~{::title})"
+>
+  <head>
+    <title>Production Cycle Form</title>
+  </head>
+
+  <body>
+    <div class="card">
+      <div class="card-header bg-success text-white">
+        <h4
+          th:text="${#strings.isEmpty(cycle.id) ?
+                 'Add New Production Cycle' :
+                 'Edit Production Cycle'}"
+        >
+          Cycle Form
+        </h4>
+      </div>
+
+      <div class="card-body">
+        <form th:action="@{/cycles/save}" th:object="${cycle}" method="post">
+          <input type="hidden" th:field="*{id}" />
+
+          <!-- Code -->
+          <div class="mb-3">
+            <label class="form-label">Cycle Code</label>
+            <input
+              type="text"
+              th:field="*{code}"
+              class="form-control"
+              placeholder="GR1_CYCLE_001"
+              required
+            />
+          </div>
+
+          <!-- Grow Room -->
+          <div class="mb-3">
+            <label class="form-label">Grow Room</label>
+            <select th:field="*{growRoom}" class="form-select" required>
+              <option
+                value=""
+                disabled="disabled"
+                th:selected="${cycle.growRoom == null}"
+              >
+                Select Room
+              </option>
+              <option
+                th:each="gr : ${growRooms}"
+                th:value="${gr.id}"
+                th:text="${gr.name}"
+              ></option>
+            </select>
+          </div>
+
+          <!-- Inoculation Phase -->
+          <div class="row mb-3">
+            <div class="col">
+              <label class="form-label">Inoculation Start</label>
+              <input
+                type="date"
+                id="inocStart"
+                name="inoculationStartDate"
+                class="form-control"
+                onchange="calcDates()"
+                required
+                th:value="${cycle.inoculationStartDate != null ? #temporals.format(cycle.inoculationStartDate,'yyyy-MM-dd') : ''}"
+              />
+            </div>
+            <div class="col">
+              <label class="form-label">Inoculation Days</label>
+              <input
+                type="number"
+                id="inocDays"
+                name="inoculationDays"
+                class="form-control"
+                min="1"
+                oninput="calcDates()"
+                required
+              />
+            </div>
+            <div class="col">
+              <label class="form-label">Inoculation End</label>
+              <input
+                type="date"
+                id="inocEnd"
+                name="inoculationEndDate"
+                class="form-control"
+                readonly
+                th:value="${cycle.inoculationEndDate != null ? #temporals.format(cycle.inoculationEndDate,'yyyy-MM-dd') : ''}"
+              />
+            </div>
+          </div>
+
+          <!-- Fruiting Phase -->
+          <div class="row mb-3">
+            <div class="col">
+              <label class="form-label">Fruiting Start</label>
+              <input
+                type="date"
+                id="fruitStart"
+                name="fruitingStartDate"
+                class="form-control"
+                onchange="calcDates()"
+                required
+                th:value="${cycle.fruitingStartDate != null ? #temporals.format(cycle.fruitingStartDate,'yyyy-MM-dd') : ''}"
+              />
+            </div>
+            <div class="col">
+              <label class="form-label">Fruiting Days</label>
+              <input
+                type="number"
+                id="fruitDays"
+                name="fruitingDays"
+                class="form-control"
+                min="1"
+                oninput="calcDates()"
+                required
+              />
+            </div>
+            <div class="col">
+              <label class="form-label">Fruiting End</label>
+              <input
+                type="date"
+                id="fruitEnd"
+                name="expectedEndDate"
+                class="form-control"
+                readonly
+                th:value="${cycle.expectedEndDate != null ? #temporals.format(cycle.expectedEndDate,'yyyy-MM-dd') : ''}"
+              />
+            </div>
+          </div>
+
+          <!-- Status -->
+          <div class="mb-3">
+            <label class="form-label">Status</label>
+            <select th:field="*{status}" class="form-select" required>
+              <option value="" disabled>Select Status</option>
+              <option value="PLANNED">PLANNED</option>
+              <option value="ACTIVE">ACTIVE</option>
+              <option value="COMPLETED">COMPLETED</option>
+              <option value="CANCELLED">CANCELLED</option>
+            </select>
+          </div>
+
+          <!-- Remarks -->
+          <div class="mb-3">
+            <label class="form-label">Remarks</label>
+            <textarea
+              th:field="*{remarks}"
+              class="form-control"
+              rows="2"
+            ></textarea>
+          </div>
+
+          <!-- Actions -->
+          <div class="d-flex justify-content-between">
+            <a th:href="@{/cycles}" class="btn btn-secondary">← Back</a>
+            <button type="submit" class="btn btn-success">💾 Save Cycle</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ===== JavaScript ===== -->
+    <script>
+      function daysBetween(d1, d2) {
+        return Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24));
+      }
+
+      function calcDates() {
+        const inocStart = document.getElementById("inocStart");
+        const inocEnd = document.getElementById("inocEnd");
+        const inocDays = document.getElementById("inocDays");
+
+        const fruitStart = document.getElementById("fruitStart");
+        const fruitEnd = document.getElementById("fruitEnd");
+        const fruitDays = document.getElementById("fruitDays");
+
+        /* ---------- FORWARD: start + days -> end ---------- */
+        if (inocStart.value && inocDays.value) {
+          const end = new Date(inocStart.value);
+          end.setDate(end.getDate() + parseInt(inocDays.value));
+          inocEnd.value = end.toISOString().split("T")[0];
+          if (!fruitStart.value) fruitStart.value = inocEnd.value;
+        }
+        if (fruitStart.value && fruitDays.value) {
+          const end = new Date(fruitStart.value);
+          end.setDate(end.getDate() + parseInt(fruitDays.value));
+          fruitEnd.value = end.toISOString().split("T")[0];
+        }
+
+        /* ---------- REVERSE: start + end -> days ---------- */
+        if (inocStart.value && inocEnd.value && !inocDays.value) {
+          inocDays.value = daysBetween(
+            new Date(inocStart.value),
+            new Date(inocEnd.value)
+          );
+        }
+        if (fruitStart.value && fruitEnd.value && !fruitDays.value) {
+          fruitDays.value = daysBetween(
+            new Date(fruitStart.value),
+            new Date(fruitEnd.value)
+          );
+        }
+      }
+
+      window.addEventListener("DOMContentLoaded", calcDates);
+    </script>
+  </body>
+</html>
