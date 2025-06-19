@@ -38,21 +38,11 @@
           <!-- Grow Room -->
           <div class="mb-3">
             <label class="form-label">Grow Room</label>
-            <select th:field="*{growRoom}" class="form-select" required>
-              <option
-                value=""
-                disabled="disabled"
-                th:selected="${cycle.growRoom == null}"
-              >
-                Select Room
-              </option>
-              <option
-                th:each="gr : ${growRooms}"
-                th:value="${gr.id}"
-                th:text="${gr.name}"
-              ></option>
-            </select>
-          </div>
+            <select th:field="*{growRoom.id}" class="form-control">
+    <option th:each="room : ${growRooms}"
+            th:value="${room.id}"
+            th:text="${room.name}">Room</option>
+</select>
 
           <!-- Inoculation Phase -->
           <div class="row mb-3">

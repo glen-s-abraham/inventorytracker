@@ -28,9 +28,9 @@
         <th>#</th>
         <th>Item</th>
         <th>Unit</th>
-        <th>Required Qty</th>
+        <!-- <th>Required Qty</th> -->
         <th>Available</th>
-        <th>Shortfall</th>
+        <!-- <th>Shortfall</th> -->
         <th>Supplier</th>
         <th>Lead Time (days)</th>
         <th>Suggested Order Date</th>
@@ -41,9 +41,9 @@
         <td th:text="${iterStat.index + 1}">1</td>
         <td th:text="${line.itemName}">Substrate</td>
         <td th:text="${line.unit}">kg</td>
-        <td th:text="${line.requiredQty}">20</td>
+        <!-- <td th:text="${line.requiredQty}">20</td> -->
         <td th:text="${line.availableQty}">5</td>
-        <td th:text="${line.shortfall}">15</td>
+        <!-- <td th:text="${line.shortfall}">15</td> -->
         <td th:text="${line.supplierName}">GrowMart</td>
         <td th:text="${line.leadTimeDays}">3</td>
         <td th:text="${line.suggestedOrderDate}">28-Jun-2025</td>

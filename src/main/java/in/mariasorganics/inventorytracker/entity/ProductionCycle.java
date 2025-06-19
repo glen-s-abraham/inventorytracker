@@ -9,6 +9,7 @@ import java.time.LocalDate;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString(exclude = "growRoom")
 public class ProductionCycle {
 
     @Id

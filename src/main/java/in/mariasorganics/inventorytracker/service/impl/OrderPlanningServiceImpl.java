@@ -18,6 +18,16 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Generates a per‑room material plan that **always lists every inventory
+ * item**.
+ * <ul>
+ * <li>If no supplier mapping exists, a single line is shown with “—”.</li>
+ * <li>If no short‑fall exists, the line is still rendered (shortfall = 0).</li>
+ * <li>Lead‑time comes from <code>Supplier.averageLeadTimeInDays</code>.</li>
+ * <li>The order date is <code>nextIdealInoculationDate – leadTime</code>.</li>
+ * </ul>
+ */
 @Service
 @RequiredArgsConstructor
 public class OrderPlanningServiceImpl implements IOrderPlanningService {
@@ -36,18 +46,19 @@ public class OrderPlanningServiceImpl implements IOrderPlanningService {
         List<RoomMaterialPlanDTO> plans = new ArrayList<>();
 
         for (GrowRoom room : rooms) {
-
-            // ✅ Get ACTIVE cycles only for this room
+            // 🔎 only ACTIVE cycles for this room
             List<ProductionCycle> roomCycles = allCycles.stream()
                     .filter(c -> c.getGrowRoom().getId().equals(room.getId()))
                     .filter(c -> "ACTIVE".equalsIgnoreCase(c.getStatus()))
                     .sorted(Comparator.comparing(ProductionCycle::getInoculationEndDate).reversed())
                     .collect(Collectors.toList());
 
-            // ✅ Skip rooms without active cycles
-            if (roomCycles.isEmpty()) continue;
+            if (roomCycles.isEmpty()) {
+                // skip rooms that aren’t in production
+                continue;
+            }
 
-            // ✅ Get the last inoculation end date (latest active one)
+            // last (most‑recent) inoculation‑end ‑> ideal next start = +1 day
             LocalDate lastEnd = roomCycles.stream()
                     .map(ProductionCycle::getInoculationEndDate)
                     .filter(Objects::nonNull)
@@ -58,26 +69,27 @@ public class OrderPlanningServiceImpl implements IOrderPlanningService {
             List<SupplierOrderLineDTO> orderLines = new ArrayList<>();
 
             for (InventoryItem item : inventory) {
-                double requiredQty = estimateRequirement(item);
-                double availableQty = item.getQuantity();
-                double shortfall = Math.max(0, requiredQty - availableQty);
+                double required = estimateRequirement(item, roomCycles); // could be 0
+                double available = item.getQuantity();
+                double shortfall = Math.max(0, required - available);
 
-                if (shortfall > 0) {
-                    List<SupplierMapping> mappings = mappingRepo.findByItem(item);
+                List<SupplierMapping> mappings = mappingRepo.findByItem(item);
 
-                    for (SupplierMapping mapping : mappings) {
-                        int leadTime = mapping.getSupplier().getAverageLeadTimeInDays(); // ✅ from Supplier entity
-                        LocalDate suggestedDate = nextIdealDate.minusDays(leadTime);
-
+                if (mappings.isEmpty()) {
+                    // show a placeholder row so the material is visible
+                    orderLines.add(blankLine(item, required, available, shortfall, nextIdealDate));
+                } else {
+                    for (SupplierMapping m : mappings) {
+                        int lead = m.getSupplier().getAverageLeadTimeInDays();
                         orderLines.add(SupplierOrderLineDTO.builder()
                                 .itemName(item.getName())
                                 .unit(item.getUnit().toString())
-                                .requiredQty(requiredQty)
-                                .availableQty(availableQty)
+                                .requiredQty(required)
+                                .availableQty(available)
                                 .shortfall(shortfall)
-                                .supplierName(mapping.getSupplier().getName())
-                                .leadTimeDays(leadTime)
-                                .suggestedOrderDate(suggestedDate.toString())
+                                .supplierName(m.getSupplier().getName())
+                                .leadTimeDays(lead)
+                                .suggestedOrderDate(nextIdealDate.minusDays(lead).toString())
                                 .build());
                     }
                 }
@@ -90,12 +102,29 @@ public class OrderPlanningServiceImpl implements IOrderPlanningService {
                     .orderLines(orderLines)
                     .build());
         }
-
         return plans;
     }
 
-    private double estimateRequirement(InventoryItem item) {
-        // Placeholder: Estimate based on fixed quantity per cycle
-        return 5.0;
+    /**
+     * Sum the requirement of this item across every active cycle for the room.
+     * (replace this stub with real logic / RawMaterialEstimate lookup if needed)
+     */
+    private double estimateRequirement(InventoryItem item, List<ProductionCycle> cycles) {
+        // TODO pull raw‑material estimates; fallback → 5 kg / pcs per cycle
+        return cycles.size() * 5.0;
+    }
+
+    private SupplierOrderLineDTO blankLine(InventoryItem item, double required, double available,
+            double shortfall, LocalDate nextIdealDate) {
+        return SupplierOrderLineDTO.builder()
+                .itemName(item.getName())
+                .unit(item.getUnit().toString())
+                .requiredQty(required)
+                .availableQty(available)
+                .shortfall(shortfall)
+                .supplierName("—")
+                .leadTimeDays(0)
+                .suggestedOrderDate(nextIdealDate.toString())
+                .build();
     }
 }
