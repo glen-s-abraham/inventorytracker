@@ -2,6 +2,7 @@ package in.mariasorganics.inventorytracker.entity;
 
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import lombok.AllArgsConstructor;
@@ -21,12 +22,16 @@ public class SupplierMapping {
   @EmbeddedId
   private SupplierMappingId id;
 
-  @ManyToOne @MapsId("itemId")
+  @ManyToOne
+  @MapsId("itemId")
+  @JoinColumn(name = "item_id")
   private InventoryItem item;
 
-  @ManyToOne @MapsId("supplierId")
+  @ManyToOne
+  @MapsId("supplierId")
+  @JoinColumn(name = "supplier_id")
   private Supplier supplier;
 
   private int leadTimeInDays;
-  private boolean preferred; // optional
+  private boolean preferred;
 }

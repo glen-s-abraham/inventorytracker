@@ -6,4 +6,5 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 public interface RawMaterialEstimateRepository extends JpaRepository<RawMaterialEstimate, Long>, JpaSpecificationExecutor<RawMaterialEstimate> {
     RawMaterialEstimate findByCycleId(Long cycleId); // Optional helper
+    
 }

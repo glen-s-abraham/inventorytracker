@@ -2,6 +2,8 @@ package in.mariasorganics.inventorytracker.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Data
@@ -13,11 +15,14 @@ public class GrowRoom {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name; // e.g., Room A, Tent 1
+    private String name;
 
     private boolean active = true;
 
-    private Integer defaultCycleIntervalDays; // e.g., 20 (days between batches)
+    private Integer defaultCycleIntervalDays;
 
     private String notes;
+
+    @OneToMany(mappedBy = "growRoom", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProductionCycle> productionCycles;
 }

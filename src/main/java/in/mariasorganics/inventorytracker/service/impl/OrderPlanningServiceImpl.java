@@ -36,13 +36,18 @@ public class OrderPlanningServiceImpl implements IOrderPlanningService {
         List<RoomMaterialPlanDTO> plans = new ArrayList<>();
 
         for (GrowRoom room : rooms) {
-            // Get all production cycles for this room
+
+            // ✅ Get ACTIVE cycles only for this room
             List<ProductionCycle> roomCycles = allCycles.stream()
                     .filter(c -> c.getGrowRoom().getId().equals(room.getId()))
+                    .filter(c -> "ACTIVE".equalsIgnoreCase(c.getStatus()))
                     .sorted(Comparator.comparing(ProductionCycle::getInoculationEndDate).reversed())
                     .collect(Collectors.toList());
 
-            // Determine the last inoculation end date or use today
+            // ✅ Skip rooms without active cycles
+            if (roomCycles.isEmpty()) continue;
+
+            // ✅ Get the last inoculation end date (latest active one)
             LocalDate lastEnd = roomCycles.stream()
                     .map(ProductionCycle::getInoculationEndDate)
                     .filter(Objects::nonNull)
@@ -61,7 +66,7 @@ public class OrderPlanningServiceImpl implements IOrderPlanningService {
                     List<SupplierMapping> mappings = mappingRepo.findByItem(item);
 
                     for (SupplierMapping mapping : mappings) {
-                        int leadTime = mapping.getSupplier().getAverageLeadTimeInDays(); // ✅ FROM SUPPLIER ENTITY
+                        int leadTime = mapping.getSupplier().getAverageLeadTimeInDays(); // ✅ from Supplier entity
                         LocalDate suggestedDate = nextIdealDate.minusDays(leadTime);
 
                         orderLines.add(SupplierOrderLineDTO.builder()
@@ -90,7 +95,7 @@ public class OrderPlanningServiceImpl implements IOrderPlanningService {
     }
 
     private double estimateRequirement(InventoryItem item) {
-        // Placeholder logic: Assume a static value per item for now
+        // Placeholder: Estimate based on fixed quantity per cycle
         return 5.0;
     }
 }

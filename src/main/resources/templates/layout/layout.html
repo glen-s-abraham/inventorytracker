@@ -27,7 +27,7 @@
   <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-success sticky-top">
       <div class="container-fluid">
-        <a class="navbar-brand" th:href="@{/products}">🌿 Inventory Tracker</a>
+        <a class="navbar-brand" th:href="@{/order-planning}">🌿 Inventory Tracker</a>
         <button
           class="navbar-toggler"
           type="button"
@@ -45,9 +45,10 @@
             class="navbar-nav me-auto mb-2 mb-lg-0"
             sec:authorize="isAuthenticated()"
           >
-            <!-- Dashboard -->
             <li class="nav-item">
-              <a class="nav-link" th:href="@{/}">Dashboard</a>
+              <a class="nav-link" th:href="@{/order-planning}">
+                Order Planning
+              </a>
             </li>
 
             <!-- Grow Rooms -->
@@ -72,12 +73,6 @@
 
             <li class="nav-item">
               <a class="nav-link" th:href="@{/inventory}">Inventory</a>
-            </li>
-
-            <li class="nav-item">
-              <a class="nav-link" th:href="@{/order-planning}">
-                Order Planning
-              </a>
             </li>
 
             <!-- Users (Admin Only) -->

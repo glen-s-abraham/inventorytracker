@@ -21,13 +21,15 @@ public class ProductionCycle {
 
     private String code;
 
-    private LocalDate inoculationStartDate; // 👈 Phase 1: Inoculation starts
-    private LocalDate inoculationEndDate; // 👈 Phase 1: Inoculation completes
+    private LocalDate inoculationStartDate;
+    private LocalDate inoculationEndDate;
+    private LocalDate fruitingStartDate;
+    private LocalDate expectedEndDate;
 
-    private LocalDate fruitingStartDate; // 👈 Phase 2: Fruiting begins
-    private LocalDate expectedEndDate; // 👈 Overall cycle end
-
-    private String status; // PLANNED / ACTIVE / COMPLETED / CANCELLED
+    private String status;
 
     private String remarks;
+
+    @OneToOne(mappedBy = "cycle", cascade = CascadeType.ALL, orphanRemoval = true)
+    private RawMaterialEstimate estimate;
 }

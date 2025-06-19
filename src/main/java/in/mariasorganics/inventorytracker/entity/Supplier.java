@@ -1,5 +1,7 @@
 package in.mariasorganics.inventorytracker.entity;
 
+import java.util.List;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -25,7 +27,10 @@ public class Supplier {
 
     private double pricePerUnit;
 
-    private double rating; // e.g., 4.5
+    private double rating;
 
     private String remarks;
+
+    @OneToMany(mappedBy = "supplier", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<SupplierMapping> supplierMappings;
 }

@@ -15,14 +15,15 @@ public class RawMaterialEstimate {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(optional = false)
+    @OneToOne(optional = false)
+    @JoinColumn(name = "cycle_id")
     private ProductionCycle cycle;
 
     private int numberOfBags;
 
-    private double spawnPerBag;      // in kg
-    private double substratePerBag;  // in kg
-    private int packagingPerBag;     // in count (e.g., covers, clips, etc.)
+    private double spawnPerBag;
+    private double substratePerBag;
+    private int packagingPerBag;
 
     private double totalSpawn;
     private double totalSubstrate;

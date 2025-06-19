@@ -19,24 +19,21 @@ public class InventoryItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name; // e.g., "Substrate", "Clips", "Covers"
+    private String name;
 
     @Enumerated(EnumType.STRING)
-    private UnitOfMeasurement unit; // kg, pcs, meters, etc.
+    private UnitOfMeasurement unit;
 
-    private double quantity; // current stock
+    private double quantity;
 
-    private double minimumStockLevel; // for low stock alert
+    private double minimumStockLevel;
 
-    private LocalDate expiryDate; // optional, only for expirable items
+    private LocalDate expiryDate;
 
     private String remarks;
 
-    /** Optional preferred supplier */
-    @OneToMany(mappedBy = "item")
+    @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SupplierMapping> supplierMappings;
-
-    /* --- Derived Properties --- */
 
     @Transient
     public boolean isExpired() {
@@ -48,11 +45,8 @@ public class InventoryItem {
         return quantity <= minimumStockLevel;
     }
 
-    /** true when 0 < daysUntilExpiry ≤ threshold */
     @Transient
     public boolean isExpiringSoon(int thresholdDays) {
-        return expiryDate != null &&
-                !isExpired() &&
-                expiryDate.isBefore(LocalDate.now().plusDays(thresholdDays));
+        return expiryDate != null && !isExpired() && expiryDate.isBefore(LocalDate.now().plusDays(thresholdDays));
     }
 }
