@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="layout/layout :: layout (~{::body}, ~{::title})"
+>
+  <head>
+    <title>Dashboard</title>
+
+
+  </head>
+
+  <body>
+    <div class="container mt-4">
+      <h2 class="mb-4">Farm Dashboard</h2>
+
+      <!-- Summary Cards -->
+      <div class="row mb-5">
+        <div class="col-md-4">
+          <div class="card border-success shadow-sm">
+            <div class="card-body text-center">
+              <h5 class="card-title text-muted">Total Active Rooms</h5>
+              <h3
+                class="card-text text-success"
+                th:text="${summary.totalRoomCount}"
+              >
+                0
+              </h3>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="card border-primary shadow-sm">
+            <div class="card-body text-center">
+              <h5 class="card-title text-muted">Active Cycles</h5>
+              <h3
+                class="card-text text-primary"
+                th:text="${summary.activeCycleCount}"
+              >
+                0
+              </h3>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="card border-danger shadow-sm">
+            <div class="card-body text-center">
+              <h5 class="card-title text-muted">Low Inventory Items</h5>
+              <h3
+                class="card-text text-danger"
+                th:text="${summary.lowInventoryCount}"
+              >
+                0
+              </h3>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Calendar -->
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title">Production Calendar</h5>
+          <div id="calendar"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Inline Thymeleaf Events Script -->
+    <script th:inline="javascript">
+      /*<![CDATA[*/
+      document.addEventListener('DOMContentLoaded', function () {
+        const calendarEl = document.getElementById('calendar');
+
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+          initialView: 'dayGridMonth',
+          height: 'auto',
+          events: [[${events}]], // Injected from controller
+          eventColor: '#28a745',
+          headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,listWeek'
+          }
+        });
+
+        calendar.render();
+      });
+      /*]]>*/
+    </script>
+  </body>
+</html>

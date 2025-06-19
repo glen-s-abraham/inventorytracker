@@ -10,4 +10,5 @@ public interface GrowRoomRepository
         extends JpaRepository<GrowRoom, Long>, JpaSpecificationExecutor<GrowRoom> {
 
     List<GrowRoom> findByActiveTrueOrderByNameAsc();
+    long countByActiveTrue();
 }
