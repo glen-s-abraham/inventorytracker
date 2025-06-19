@@ -1,0 +1,46 @@
+<html xmlns:th="http://www.thymeleaf.org" th:replace="layout/layout :: layout (~{::body}, ~{::title})">
+
+<body>
+<div class="card">
+    <div class="card-header bg-success text-white">
+        <h4 th:text="${#strings.isEmpty(user.id) ? 'Add New User' : 'Edit User'}"></h4>
+    </div>
+    <div class="card-body">
+        <form th:action="@{/users/save}" th:object="${user}" method="post">
+            <input type="hidden" th:field="*{id}" />
+
+            <div class="mb-3">
+                <label class="form-label">Username</label>
+                <input type="text" th:field="*{username}" class="form-control" required />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Password</label>
+                <input type="password" th:field="*{password}" class="form-control" required />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Role</label>
+                <select th:field="*{role}" class="form-select" required>
+                    <option value="ROLE_ADMIN">ROLE_ADMIN</option>
+                    <option value="ROLE_USER">ROLE_USER</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Enabled</label>
+                <select th:field="*{enabled}" class="form-select" required>
+                    <option value="true">Yes</option>
+                    <option value="false">No</option>
+                </select>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <a th:href="@{/users}" class="btn btn-secondary">← Back</a>
+                <button type="submit" class="btn btn-success">💾 Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>

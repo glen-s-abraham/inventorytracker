@@ -1,0 +1,53 @@
+<!-- users/list.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="layout/layout :: layout (~{::body}, ~{::title})">
+
+<body>
+<div>
+    <h2>User Management</h2>
+    <a class="btn btn-success mb-3" th:href="@{/users/add}">➕ Add New User</a>
+
+    <table class="table table-bordered table-striped">
+        <thead class="table-light">
+        <tr>
+            <th>ID</th>
+            <th>Username</th>
+            <th>Role</th>
+            <th>Enabled</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="user : ${usersPage.content}">
+            <td th:text="${user.id}"></td>
+            <td th:text="${user.username}"></td>
+            <td th:text="${user.role}"></td>
+            <td th:text="${user.enabled}"></td>
+            <td>
+                <a th:href="@{/users/edit/{id}(id=${user.id})}" class="btn btn-sm btn-primary">Edit</a>
+                <form th:action="@{/users/delete/{id}(id=${user.id})}" method="post" style="display:inline">
+                    <button class="btn btn-sm btn-danger" onclick="return confirm('Delete this user?')">Delete</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <nav>
+        <ul class="pagination">
+            <li class="page-item" th:classappend="${usersPage.first} ? 'disabled'">
+                <a class="page-link" th:href="@{'/users'(page=${usersPage.number - 1})}">Previous</a>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link">
+                    Page <span th:text="${usersPage.number + 1}"></span> of <span th:text="${usersPage.totalPages}"></span>
+                </span>
+            </li>
+            <li class="page-item" th:classappend="${usersPage.last} ? 'disabled'">
+                <a class="page-link" th:href="@{'/users'(page=${usersPage.number + 1})}">Next</a>
+            </li>
+        </ul>
+    </nav>
+</div>
+</body>
+</html>
