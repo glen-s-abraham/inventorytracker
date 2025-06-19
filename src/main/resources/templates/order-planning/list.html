@@ -9,45 +9,51 @@
 <body>
 <div class="container mt-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>📦 Order Planning & Recommendations</h2>
+    <h2>📦 Room-wise Order Planning</h2>
   </div>
 
   <div class="alert alert-info shadow-sm">
-    This table is auto-generated based on inventory shortfalls, production cycles, and supplier info.
+    This table is auto-generated based on grow room inoculation cycles, inventory shortfalls, and supplier lead times.
   </div>
 
-  <!-- ▸ TABLE --------------------------------------------------------------->
-  <table class="table table-bordered table-striped align-middle">
-    <thead class="table-light">
-    <tr>
-      <th>#</th>
-      <th>Item</th>
-      <th>Unit</th>
-      <th>Required Qty</th>
-      <th>Available Stock</th>
-      <th>To Order</th>
-      <th>Supplier</th>
-      <th>Lead Time (days)</th>
-      <th>Suggested Order Date</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="entry, iterStat : ${planList}">
-      <td th:text="${iterStat.index + 1}">1</td>
-      <td th:text="${entry.itemName}">Substrate</td>
-      <td th:text="${entry.unit}">kg</td>
-      <td th:text="${entry.totalRequired}">50</td>
-      <td th:text="${entry.availableStock}">20</td>
-      <td th:text="${entry.quantityToOrder}">30</td>
-      <td th:text="${entry.supplierName != null ? entry.supplierName : '-'}">GrowTech</td>
-      <td th:text="${entry.leadTimeDays}">3</td>
-      <td th:text="${entry.suggestedOrderDate}">01‑Jul‑2025</td>
-    </tr>
-    <tr th:if="${planList.size() == 0}">
-      <td colspan="9" class="text-center">No planned orders currently.</td>
-    </tr>
-    </tbody>
-  </table>
+  <!-- Loop through each room -->
+  <div th:each="roomPlan : ${roomPlans}">
+    <h4 class="mt-4" th:text="'🛖 ' + ${roomPlan.roomName} + ' — Ideal Inoculation Start: ' + ${#temporals.format(roomPlan.nextInoculationIdealDate, 'dd-MMM-yyyy')}">
+      Room 1 — Ideal Inoculation Start: 01-Jul-2025
+    </h4>
+
+    <table class="table table-bordered table-striped align-middle mt-2">
+      <thead class="table-light">
+      <tr>
+        <th>#</th>
+        <th>Item</th>
+        <th>Unit</th>
+        <th>Required Qty</th>
+        <th>Available</th>
+        <th>Shortfall</th>
+        <th>Supplier</th>
+        <th>Lead Time (days)</th>
+        <th>Suggested Order Date</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="line, iterStat : ${roomPlan.orderLines}">
+        <td th:text="${iterStat.index + 1}">1</td>
+        <td th:text="${line.itemName}">Substrate</td>
+        <td th:text="${line.unit}">kg</td>
+        <td th:text="${line.requiredQty}">20</td>
+        <td th:text="${line.availableQty}">5</td>
+        <td th:text="${line.shortfall}">15</td>
+        <td th:text="${line.supplierName}">GrowMart</td>
+        <td th:text="${line.leadTimeDays}">3</td>
+        <td th:text="${line.suggestedOrderDate}">28-Jun-2025</td>
+      </tr>
+      <tr th:if="${roomPlan.orderLines.size() == 0}">
+        <td colspan="9" class="text-center">No shortages or orders needed for this room.</td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
 </div>
 </body>
 </html>

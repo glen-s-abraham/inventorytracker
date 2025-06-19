@@ -1,9 +1,9 @@
 package in.mariasorganics.inventorytracker.service;
 
-import in.mariasorganics.inventorytracker.dto.OrderPlanEntry;
+import in.mariasorganics.inventorytracker.dto.RoomMaterialPlanDTO;
 
 import java.util.List;
 
 public interface IOrderPlanningService {
-    List<OrderPlanEntry> generateOrderPlan();
+    public List<RoomMaterialPlanDTO> generateRoomWiseOrderPlan();
 }

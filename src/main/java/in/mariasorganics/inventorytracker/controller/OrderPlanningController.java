@@ -1,6 +1,6 @@
 package in.mariasorganics.inventorytracker.controller;
 
-import in.mariasorganics.inventorytracker.dto.OrderPlanEntry;
+import in.mariasorganics.inventorytracker.dto.RoomMaterialPlanDTO;
 import in.mariasorganics.inventorytracker.service.IOrderPlanningService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.List;
 
+/**
+ * Displays the room‑wise order‑planning view.
+ */
 @Controller
 @RequestMapping("/order-planning")
 @RequiredArgsConstructor
@@ -19,8 +22,11 @@ public class OrderPlanningController {
 
     @GetMapping
     public String showPlan(Model model) {
-        List<OrderPlanEntry> planList = planningService.generateOrderPlan();
-        model.addAttribute("planList", planList);
-        return "order-planning/list";
+
+        // pull the room‑centric purchase recommendations
+        List<RoomMaterialPlanDTO> roomPlans = planningService.generateRoomWiseOrderPlan();
+
+        model.addAttribute("roomPlans", roomPlans);
+        return "order-planning/list";   // remember to update the list.html to iterate over roomPlans
     }
 }
