@@ -4,56 +4,132 @@
 
 <head>
   <title>📦 Order Planning</title>
+
+  <!-- CSRF meta tags are rendered by Spring layout -->
+  <meta name="_csrf"        th:content="${_csrf.token}" />
+  <meta name="_csrf_header" th:content="${_csrf.headerName}" />
 </head>
 
 <body>
 <div class="container mt-4">
+
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>📦 Room-wise Order Planning</h2>
+    <h2>📦 Room‑wise Order Planning</h2>
   </div>
 
   <div class="alert alert-info shadow-sm">
-    This table is auto-generated based on grow room inoculation cycles, inventory shortfalls, and supplier lead times.
+    This table is auto‑generated from grow‑room cycles, inventory shortfalls and supplier lead‑times.
   </div>
 
-  <!-- Loop through each room -->
+  <!-- ─── one table per room ─────────────────────────────────────────────── -->
   <div th:each="roomPlan : ${roomPlans}">
-    <h4 class="mt-4" th:text="'🛖 ' + ${roomPlan.roomName} + ' — Ideal Inoculation Start: ' + ${#temporals.format(roomPlan.nextInoculationIdealDate, 'dd-MMM-yyyy')}">
-      Room 1 — Ideal Inoculation Start: 01-Jul-2025
+    <h4 class="mt-4"
+        th:text="'🛖 ' + ${roomPlan.roomName} +
+                 ' — Ideal Inoculation Start: ' + ${#temporals.format(roomPlan.nextInoculationIdealDate, 'dd-MMM-yyyy')}">
+      🛖 Tent 1 — Ideal Inoculation Start: 2025‑07‑01
     </h4>
 
     <table class="table table-bordered table-striped align-middle mt-2">
       <thead class="table-light">
-      <tr>
-        <th>#</th>
-        <th>Item</th>
-        <th>Unit</th>
-        <!-- <th>Required Qty</th> -->
-        <th>Available</th>
-        <!-- <th>Shortfall</th> -->
-        <th>Supplier</th>
-        <th>Lead Time (days)</th>
-        <th>Suggested Order Date</th>
-      </tr>
+        <tr>
+          <th>#</th>
+          <th>Item</th>
+          <th>Unit</th>
+          <th>Available</th>
+          <th>Supplier</th>
+          <th>Lead Time (days)</th>
+          <th>Suggested Order Date</th>
+          <th><!-- action --></th>
+        </tr>
       </thead>
+
       <tbody>
       <tr th:each="line, iterStat : ${roomPlan.orderLines}">
         <td th:text="${iterStat.index + 1}">1</td>
         <td th:text="${line.itemName}">Substrate</td>
         <td th:text="${line.unit}">kg</td>
-        <!-- <td th:text="${line.requiredQty}">20</td> -->
         <td th:text="${line.availableQty}">5</td>
-        <!-- <td th:text="${line.shortfall}">15</td> -->
         <td th:text="${line.supplierName}">GrowMart</td>
         <td th:text="${line.leadTimeDays}">3</td>
-        <td th:text="${line.suggestedOrderDate}">28-Jun-2025</td>
+        <td th:text="${line.suggestedOrderDate}">2025‑06‑28</td>
+
+        <!-- Add / Remove reminder -->
+        <td>
+          <button class="btn btn-sm"
+                  th:classappend="${line.reminderExists} ? 'btn-outline-danger' : 'btn-outline-primary'"
+                  th:text="${line.reminderExists} ? '❌ Remove Reminder' : '🕒 Add Reminder'"
+                  th:data-room-id="${roomPlan.roomId}"
+                  th:data-date="${line.suggestedOrderDate}"
+                  th:data-mat="${line.itemName}"
+                  th:data-supp="${line.supplierName}"
+                  th:attr="onclick=${line.reminderExists} ? 'removeReminder(this)' : 'addReminder(this)'">
+          </button>
+        </td>
       </tr>
+
       <tr th:if="${roomPlan.orderLines.size() == 0}">
-        <td colspan="9" class="text-center">No shortages or orders needed for this room.</td>
+        <td colspan="8" class="text-center">
+          No shortages or orders needed for this room.
+        </td>
       </tr>
       </tbody>
     </table>
-  </div>
-</div>
+  </div><!-- /each roomPlan -->
+
+</div><!-- /.container -->
+
+<!-- ─── AJAX helpers (CSRF‑aware) ────────────────────────────────────────── -->
+<script>
+  const csrfToken  = document.querySelector('meta[name="_csrf"]').content;
+  const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+
+  async function addReminder(btn) {
+    const body = {
+      growRoomId   : btn.dataset.roomId,
+      materialName : btn.dataset.mat,
+      supplierName : btn.dataset.supp,
+      orderDate    : btn.dataset.date
+    };
+
+    const res = await fetch('/api/reminders', {
+      method  : 'POST',
+      headers : {
+        'Content-Type': 'application/json',
+        [csrfHeader]: csrfToken
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (res.ok) {
+      alert('Reminder saved ✔');
+      location.reload();
+    } else {
+      alert('❌ Failed to save reminder: ' + (await res.text()));
+    }
+  }
+
+  async function removeReminder(btn) {
+    const params = new URLSearchParams({
+      growRoomId   : btn.dataset.roomId,
+      materialName : btn.dataset.mat,
+      supplierName : btn.dataset.supp,
+      orderDate    : btn.dataset.date
+    });
+
+    const res = await fetch('/api/reminders?' + params, {
+      method: 'DELETE',
+      headers: {
+        [csrfHeader]: csrfToken
+      }
+    });
+
+    if (res.ok) {
+      alert('Reminder removed ✔');
+      location.reload();
+    } else {
+      alert('❌ Failed to remove reminder: ' + (await res.text()));
+    }
+  }
+</script>
 </body>
 </html>

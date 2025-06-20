@@ -16,22 +16,22 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class DashboardServiceImpl implements IDashboardService {
 
-    private final GrowRoomRepository       growRoomRepo;
+    private final GrowRoomRepository growRoomRepo;
     private final ProductionCycleRepository cycleRepo;
-    private final InventoryItemRepository   inventoryRepo;
-    private final SupplierMappingRepository supplierMappingRepo;
+    private final InventoryItemRepository inventoryRepo;
+    private final OrderReminderRepository reminderRepo;
 
     /* ---------- Summary cards ---------- */
 
     @Override
     public DashboardSummaryDTO getSummary() {
 
-        long activeRooms   = growRoomRepo.findAll().stream()
-                                         .filter(GrowRoom::isActive)
-                                         .count();
+        long activeRooms = growRoomRepo.findAll().stream()
+                .filter(GrowRoom::isActive)
+                .count();
 
-        long activeCycles  = cycleRepo.countByStatus("ACTIVE");
-        long lowInventory  = inventoryRepo.countByQuantityLessThan(10);
+        long activeCycles = cycleRepo.countByStatus("ACTIVE");
+        long lowInventory = inventoryRepo.countByQuantityLessThan(10);
 
         return DashboardSummaryDTO.builder()
                 .totalRoomCount((int) activeRooms)
@@ -45,35 +45,48 @@ public class DashboardServiceImpl implements IDashboardService {
     @Override
     public List<CalendarEventDTO> getCalendarEvents() {
 
-        return cycleRepo.findAll().stream()
+        List<CalendarEventDTO> cycleEvents = cycleRepo.findAll().stream()
                 .flatMap(cycle -> {
                     String room = cycle.getGrowRoom() != null
-                                    ? cycle.getGrowRoom().getName()
-                                    : "Unknown Room";
+                            ? cycle.getGrowRoom().getName()
+                            : "Unknown Room";
 
                     return Stream.of(
                             createEvent("Inoculation Start", room,
-                                        cycle.getInoculationStartDate(), "inoculation-start"),
+                                    cycle.getInoculationStartDate(), "inoculation-start"),
                             createEvent("Inoculation End", room,
-                                        cycle.getInoculationEndDate(),   "inoculation-end"),
+                                    cycle.getInoculationEndDate(), "inoculation-end"),
                             createEvent("Fruiting Start", room,
-                                        cycle.getFruitingStartDate(),    "fruiting-start"),
+                                    cycle.getFruitingStartDate(), "fruiting-start"),
                             createEvent("Fruiting End", room,
-                                        cycle.getExpectedEndDate(),      "fruiting-end")
-                    );
+                                    cycle.getExpectedEndDate(), "fruiting-end"));
                 })
-                .filter(Objects::nonNull)          // drop nulls (missing dates)
+                .filter(Objects::nonNull) // drop nulls (missing dates)
                 .toList();
+
+        List<CalendarEventDTO> reminderEvents = reminderRepo.findAll().stream()
+                .map(r -> CalendarEventDTO.builder()
+                        .title(r.getMaterialName() + " — Order (" + r.getSupplierName() + ")")
+                        .date(r.getOrderDate())
+                        .type("order")
+                        .roomName(r.getGrowRoom().getName())
+                        .color("#ff9800") // orange
+                        .build())
+                .toList();
+
+        return Stream.concat(cycleEvents.stream(), reminderEvents.stream()).toList();
+
     }
 
     /* ---------- Helpers ---------- */
 
     private CalendarEventDTO createEvent(String label,
-                                         String room,
-                                         LocalDate date,
-                                         String type) {
+            String room,
+            LocalDate date,
+            String type) {
 
-        if (date == null) return null;
+        if (date == null)
+            return null;
 
         return CalendarEventDTO.builder()
                 .title(room + " — " + label)
@@ -86,11 +99,11 @@ public class DashboardServiceImpl implements IDashboardService {
 
     private String getColorForEventType(String type) {
         return switch (type) {
-            case "inoculation-start" -> "#28a745";  // green
-            case "inoculation-end"   -> "#66bb6a";  // light‑green
-            case "fruiting-start"    -> "#007bff";  // blue
-            case "fruiting-end"      -> "#6c757d";  // grey
-            default                  -> "#ffc107";  // amber fallback
+            case "inoculation-start" -> "#28a745"; // green
+            case "inoculation-end" -> "#66bb6a"; // light‑green
+            case "fruiting-start" -> "#007bff"; // blue
+            case "fruiting-end" -> "#6c757d"; // grey
+            default -> "#ffc107"; // amber fallback
         };
     }
 }
