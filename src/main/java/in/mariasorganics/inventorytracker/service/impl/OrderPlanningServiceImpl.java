@@ -12,84 +12,58 @@ import java.time.LocalDate;
 import java.util.*;
 
 /**
- * Builds a room‑wise purchase plan that **always shows every inventory item** –
- * even when no supplier is mapped or no short‑fall exists.  
- * A button in the view lets the user add / remove a reminder for each line;  
- * that state is surfaced via {@code SupplierOrderLineDTO.reminderExists}.
+ * Builds a separate order plan for each PLANNED production cycle,
+ * showing required inventory items, shortfalls, and supplier-wise purchase dates.
  */
 @Service
 @RequiredArgsConstructor
 public class OrderPlanningServiceImpl implements IOrderPlanningService {
 
-    private final GrowRoomRepository        growRoomRepo;
-    private final InventoryItemRepository   inventoryRepo;
+    private final GrowRoomRepository growRoomRepo;
+    private final InventoryItemRepository inventoryRepo;
     private final ProductionCycleRepository cycleRepo;
     private final SupplierMappingRepository mappingRepo;
-    private final OrderReminderRepository   reminderRepo;   // ← NEW
-
-    // --------------------------------------------------------------------- //
-    //  Public API
-    // --------------------------------------------------------------------- //
+    private final OrderReminderRepository reminderRepo;
 
     @Override
     public List<RoomMaterialPlanDTO> generateRoomWiseOrderPlan() {
 
-        List<GrowRoom>        rooms      = growRoomRepo.findAll();
-        List<InventoryItem>   allItems   = inventoryRepo.findAll();
-        List<ProductionCycle> allCycles  = cycleRepo.findAll();
+        List<InventoryItem> allItems = inventoryRepo.findAll();
+        List<ProductionCycle> allCycles = cycleRepo.findAll();
 
-        List<RoomMaterialPlanDTO> result = new ArrayList<>();
+        List<RoomMaterialPlanDTO> plans = new ArrayList<>();
 
-        for (GrowRoom room : rooms) {
+        for (ProductionCycle cycle : allCycles) {
+            if (!"PLANNED".equalsIgnoreCase(cycle.getStatus())) continue;
+            if (cycle.getInoculationStartDate() == null) continue;
 
-            // --- pick ACTIVE cycles for this room -----------------------------------------
-            List<ProductionCycle> roomCycles = allCycles.stream()
-                    .filter(c -> Objects.equals(c.getGrowRoom().getId(), room.getId()))
-                    .filter(c -> "ACTIVE".equalsIgnoreCase(c.getStatus()))
-                    .sorted(Comparator.comparing(ProductionCycle::getInoculationEndDate).reversed())
-                    .toList();
+            GrowRoom room = cycle.getGrowRoom();
+            LocalDate inocStart = cycle.getInoculationStartDate();
 
-            if (roomCycles.isEmpty()) continue;               // idle room – skip
-
-            // --- derive “next ideal inoculation start” ------------------------------------
-            LocalDate lastInocEnd = roomCycles.stream()
-                    .map(ProductionCycle::getInoculationEndDate)
-                    .filter(Objects::nonNull)
-                    .findFirst()
-                    .orElse(LocalDate.now());
-
-            LocalDate nextIdealStart = lastInocEnd.plusDays(1);
-
-            // --- build order lines --------------------------------------------------------
             List<SupplierOrderLineDTO> orderLines = new ArrayList<>();
 
             for (InventoryItem item : allItems) {
-
-                double required   = estimateRequirement(item, roomCycles);
-                double available  = item.getQuantity();
-                double shortfall  = Math.max(0, required - available);
+                double required = estimateRequirement(item, List.of(cycle));
+                double available = item.getQuantity();
+                double shortfall = Math.max(0, required - available);
 
                 List<SupplierMapping> mappings = mappingRepo.findByItem(item);
 
                 if (mappings.isEmpty()) {
-                    orderLines.add(
-                            blankLine(room, item, required, available,
-                                      shortfall, nextIdealStart));
+                    orderLines.add(blankLine(room, item, required, available, shortfall, inocStart));
                     continue;
                 }
 
                 for (SupplierMapping map : mappings) {
+                    int leadDays = map.getSupplier().getAverageLeadTimeInDays();
+                    LocalDate orderDate = inocStart.minusDays(leadDays);
 
-                    int      leadDays  = map.getSupplier().getAverageLeadTimeInDays();
-                    LocalDate orderDate = nextIdealStart.minusDays(leadDays);
-
-                    boolean reminderSet =
-                            reminderRepo.existsByGrowRoom_IdAndMaterialNameAndSupplierNameAndOrderDate(
-                                    room.getId(),
-                                    item.getName(),
-                                    map.getSupplier().getName(),
-                                    orderDate
-                            );
+                    boolean reminderSet = reminderRepo.existsByGrowRoom_IdAndMaterialNameAndSupplierNameAndOrderDate(
+                            room.getId(),
+                            item.getName(),
+                            map.getSupplier().getName(),
+                            orderDate
+                    );
 
                     orderLines.add(SupplierOrderLineDTO.builder()
                             .itemName(item.getName())
@@ -105,44 +79,50 @@ public class OrderPlanningServiceImpl implements IOrderPlanningService {
                 }
             }
 
-            // ------- add plan for this room ----------------------------------------------
-            result.add(RoomMaterialPlanDTO.builder()
+            plans.add(RoomMaterialPlanDTO.builder()
                     .roomId(room.getId())
-                    .roomName(room.getName())
-                    .nextInoculationIdealDate(nextIdealStart)
+                    .roomName(room.getName() + " - " + cycle.getCode())
+                    .nextInoculationIdealDate(inocStart)
                     .orderLines(orderLines)
                     .build());
         }
-        return result;
+        plans.sort(Comparator.comparing(RoomMaterialPlanDTO::getNextInoculationIdealDate));
+        return plans;
+        
     }
 
-    // --------------------------------------------------------------------- //
-    //  Helpers
-    // --------------------------------------------------------------------- //
+    /** Estimate based on RawMaterialEstimate; fallback to 5 if unknown */
+    private double estimateRequirement(InventoryItem item, List<ProductionCycle> cycles) {
+        double total = 0.0;
+        String key = item.getName().trim().toLowerCase();
 
-    /**
-     * Crude requirement estimate:  5 units per active cycle.
-     * Replace with a real formula or DB lookup when available.
-     */
-    private double estimateRequirement(InventoryItem item,
-                                       List<ProductionCycle> cycles) {
-        return cycles.size() * 5.0;
+        for (ProductionCycle cycle : cycles) {
+            RawMaterialEstimate est = cycle.getEstimate();
+            if (est != null) {
+                switch (key) {
+                    case "spawn" -> total += est.getTotalSpawn();
+                    case "pellettes" -> total += est.getTotalSubstrate();
+                    case "packaging" -> total += est.getTotalPackaging();
+                    default -> total += 5.0;
+                }
+            } else {
+                total += 5.0;
+            }
+        }
+        return total;
     }
 
-    /**
-     * Creates the placeholder “no supplier” row so the material
-     * is never hidden from the operator.
-     */
+    /** Placeholder entry when no supplier is mapped */
     private SupplierOrderLineDTO blankLine(GrowRoom room,
                                            InventoryItem item,
                                            double required,
                                            double available,
                                            double shortfall,
-                                           LocalDate orderDate) {
+                                           LocalDate inocStart) {
 
-        boolean reminderSet =
-                reminderRepo.existsByGrowRoom_IdAndMaterialNameAndSupplierNameAndOrderDate(
-                        room.getId(), item.getName(), "—", orderDate);
+        boolean reminderSet = reminderRepo.existsByGrowRoom_IdAndMaterialNameAndSupplierNameAndOrderDate(
+                room.getId(), item.getName(), "—", inocStart
+        );
 
         return SupplierOrderLineDTO.builder()
                 .itemName(item.getName())
@@ -152,7 +132,7 @@ public class OrderPlanningServiceImpl implements IOrderPlanningService {
                 .shortfall(shortfall)
                 .supplierName("—")
                 .leadTimeDays(0)
-                .suggestedOrderDate(orderDate)
+                .suggestedOrderDate(inocStart)
                 .reminderExists(reminderSet)
                 .build();
     }

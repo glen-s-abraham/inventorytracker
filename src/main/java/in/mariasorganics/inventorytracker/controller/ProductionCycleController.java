@@ -35,8 +35,7 @@ public class ProductionCycleController {
 
         Page<ProductionCycle> cycles = cycleService.getFilteredPaginated(
                 keyword, inocFrom, inocTo, status, growRoomId,
-                sortField, sortDir, page, size
-        );
+                sortField, sortDir, page, size);
 
         model.addAttribute("cyclePage", cycles);
         model.addAttribute("keyword", keyword);
@@ -62,15 +61,23 @@ public class ProductionCycleController {
     public String edit(@PathVariable Long id, Model model) {
         cycleService.findById(id).ifPresentOrElse(
                 cycle -> model.addAttribute("cycle", cycle),
-                () -> model.addAttribute("cycle", new ProductionCycle())
-        );
+                () -> model.addAttribute("cycle", new ProductionCycle()));
         model.addAttribute("growRooms", growRoomService.findAll());
         return "cycles/form";
     }
 
     @PostMapping("/save")
-    public String save(@ModelAttribute ProductionCycle cycle) {
-        cycleService.save(cycle);
+    public String save(@ModelAttribute ProductionCycle cycle,
+            @RequestParam(value = "planNext", required = false) boolean planNext) {
+
+        boolean isNewOrActivated = cycle.getId() == null || "ACTIVE".equalsIgnoreCase(cycle.getStatus());
+
+        ProductionCycle saved = cycleService.save(cycle);
+
+        if (isNewOrActivated && planNext) {
+            cycleService.planNextCycle(saved);
+        }
+
         return "redirect:/cycles";
     }
 

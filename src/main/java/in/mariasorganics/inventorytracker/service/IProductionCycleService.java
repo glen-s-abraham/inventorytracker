@@ -28,4 +28,6 @@ public interface IProductionCycleService {
                                                String sortDir,
                                                int page,
                                                int size);
+    
+    public void planNextCycle(ProductionCycle current);
 }

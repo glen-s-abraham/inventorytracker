@@ -5,7 +5,7 @@
 <head>
   <title>📦 Order Planning</title>
 
-  <!-- CSRF meta tags are rendered by Spring layout -->
+  <!-- CSRF meta tags (inserted by the layout) -->
   <meta name="_csrf"        th:content="${_csrf.token}" />
   <meta name="_csrf_header" th:content="${_csrf.headerName}" />
 </head>
@@ -21,11 +21,12 @@
     This table is auto‑generated from grow‑room cycles, inventory shortfalls and supplier lead‑times.
   </div>
 
-  <!-- ─── one table per room ─────────────────────────────────────────────── -->
+  <!-- ── one table per room ──────────────────────────────────────────────── -->
   <div th:each="roomPlan : ${roomPlans}">
     <h4 class="mt-4"
         th:text="'🛖 ' + ${roomPlan.roomName} +
-                 ' — Ideal Inoculation Start: ' + ${#temporals.format(roomPlan.nextInoculationIdealDate, 'dd-MMM-yyyy')}">
+                 ' — Ideal Inoculation Start: ' +
+                 ${#temporals.format(roomPlan.nextInoculationIdealDate,'dd-MMM-yyyy')}">
       🛖 Tent 1 — Ideal Inoculation Start: 2025‑07‑01
     </h4>
 
@@ -35,10 +36,11 @@
           <th>#</th>
           <th>Item</th>
           <th>Unit</th>
+          <th>Required</th>            <!-- NEW -->
           <th>Available</th>
           <th>Supplier</th>
           <th>Lead Time (days)</th>
-          <th>Suggested Order Date</th>
+          <th>Suggested Order Date</th>
           <th><!-- action --></th>
         </tr>
       </thead>
@@ -48,6 +50,7 @@
         <td th:text="${iterStat.index + 1}">1</td>
         <td th:text="${line.itemName}">Substrate</td>
         <td th:text="${line.unit}">kg</td>
+        <td th:text="${#numbers.formatDecimal(line.requiredQty,1,2)}">10.0</td><!-- NEW -->
         <td th:text="${line.availableQty}">5</td>
         <td th:text="${line.supplierName}">GrowMart</td>
         <td th:text="${line.leadTimeDays}">3</td>
@@ -57,18 +60,21 @@
         <td>
           <button class="btn btn-sm"
                   th:classappend="${line.reminderExists} ? 'btn-outline-danger' : 'btn-outline-primary'"
-                  th:text="${line.reminderExists} ? '❌ Remove Reminder' : '🕒 Add Reminder'"
+                  th:text="${line.reminderExists} ? '❌ Remove Reminder' : '🕒 Add Reminder'"
                   th:data-room-id="${roomPlan.roomId}"
-                  th:data-date="${line.suggestedOrderDate}"
-                  th:data-mat="${line.itemName}"
-                  th:data-supp="${line.supplierName}"
-                  th:attr="onclick=${line.reminderExists} ? 'removeReminder(this)' : 'addReminder(this)'">
+                  th:data-date    ="${line.suggestedOrderDate}"
+                  th:data-mat     ="${line.itemName}"
+                  th:data-supp    ="${line.supplierName}"
+                  th:attr="onclick=${line.reminderExists} ?
+                           'removeReminder(this)' :
+                           'addReminder(this)'">
           </button>
         </td>
       </tr>
 
       <tr th:if="${roomPlan.orderLines.size() == 0}">
-        <td colspan="8" class="text-center">
+        <!-- 9 columns now (one extra for “Required”) -->
+        <td colspan="9" class="text-center">
           No shortages or orders needed for this room.
         </td>
       </tr>
@@ -78,7 +84,7 @@
 
 </div><!-- /.container -->
 
-<!-- ─── AJAX helpers (CSRF‑aware) ────────────────────────────────────────── -->
+<!-- ── AJAX helpers (CSRF‑aware) ─────────────────────────────────────────── -->
 <script>
   const csrfToken  = document.querySelector('meta[name="_csrf"]').content;
   const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
@@ -93,18 +99,15 @@
 
     const res = await fetch('/api/reminders', {
       method  : 'POST',
-      headers : {
-        'Content-Type': 'application/json',
-        [csrfHeader]: csrfToken
-      },
-      body: JSON.stringify(body)
+      headers : { 'Content-Type':'application/json', [csrfHeader]: csrfToken },
+      body    : JSON.stringify(body)
     });
 
     if (res.ok) {
       alert('Reminder saved ✔');
       location.reload();
     } else {
-      alert('❌ Failed to save reminder: ' + (await res.text()));
+      alert('❌ Failed to save reminder: ' + (await res.text()));
     }
   }
 
@@ -117,17 +120,15 @@
     });
 
     const res = await fetch('/api/reminders?' + params, {
-      method: 'DELETE',
-      headers: {
-        [csrfHeader]: csrfToken
-      }
+      method  : 'DELETE',
+      headers : { [csrfHeader]: csrfToken }
     });
 
     if (res.ok) {
       alert('Reminder removed ✔');
       location.reload();
     } else {
-      alert('❌ Failed to remove reminder: ' + (await res.text()));
+      alert('❌ Failed to remove reminder: ' + (await res.text()));
     }
   }
 </script>
