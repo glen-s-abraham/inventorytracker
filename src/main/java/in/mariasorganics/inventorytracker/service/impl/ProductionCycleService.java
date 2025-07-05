@@ -1,6 +1,8 @@
 package in.mariasorganics.inventorytracker.service.impl;
 
+import in.mariasorganics.inventorytracker.entity.GrowRoom;
 import in.mariasorganics.inventorytracker.entity.ProductionCycle;
+import in.mariasorganics.inventorytracker.repository.GrowRoomRepository;
 import in.mariasorganics.inventorytracker.repository.ProductionCycleRepository;
 import in.mariasorganics.inventorytracker.service.IProductionCycleService;
 import in.mariasorganics.inventorytracker.service.specs.ProductionCycleSpecifications;
@@ -20,6 +22,7 @@ import java.util.Optional;
 public class ProductionCycleService implements IProductionCycleService {
 
     private final ProductionCycleRepository repo;
+    private final GrowRoomRepository growRoomRepo;
 
     @Override
     public List<ProductionCycle> findAll() {
@@ -33,6 +36,15 @@ public class ProductionCycleService implements IProductionCycleService {
 
     @Override
     public ProductionCycle save(ProductionCycle cycle) {
+        // Ensure GrowRoom and FruitingRoom are managed entities
+        if (cycle.getGrowRoom() != null && cycle.getGrowRoom().getId() != null) {
+            GrowRoom gr = growRoomRepo.findById(cycle.getGrowRoom().getId()).orElseThrow();
+            cycle.setGrowRoom(gr);
+        }
+        if (cycle.getFruitingRoom() != null && cycle.getFruitingRoom().getId() != null) {
+            GrowRoom fr = growRoomRepo.findById(cycle.getFruitingRoom().getId()).orElse(null);
+            cycle.setFruitingRoom(fr);
+        }
         return repo.save(cycle);
     }
 
@@ -73,25 +85,67 @@ public class ProductionCycleService implements IProductionCycleService {
     @Override
     @Transactional
     public void planNextCycle(ProductionCycle current) {
-        // 1. Derive dates
-        LocalDate inocStart = current.getExpectedEndDate();
-        int inocDays = (int) ChronoUnit.DAYS.between(current.getInoculationStartDate(), current.getInoculationEndDate());
-        int fruitDays = (int) ChronoUnit.DAYS.between(current.getFruitingStartDate(), current.getExpectedEndDate());
-
-        LocalDate inocEnd = inocStart.plusDays(inocDays);
-        LocalDate fruitEnd = inocEnd.plusDays(fruitDays);
-
-        // 2. Build a new entity (PLANNED)
         ProductionCycle next = new ProductionCycle();
         next.setCode(current.getCode() + "_NEXT");
-        next.setGrowRoom(current.getGrowRoom());
-        next.setInoculationStartDate(inocStart);
-        next.setInoculationEndDate(inocEnd);
-        next.setFruitingStartDate(inocEnd);
-        next.setExpectedEndDate(fruitEnd);
+
+        // Ensure managed references
+        next.setGrowRoom(growRoomRepo.findById(current.getGrowRoom().getId()).orElseThrow());
+        if (current.getFruitingRoom() != null) {
+            next.setFruitingRoom(growRoomRepo.findById(current.getFruitingRoom().getId()).orElse(null));
+        }
+
+        next.setHasInoculation(current.getHasInoculation());
+        next.setHasFruiting(current.getHasFruiting());
         next.setStatus("PLANNED");
         next.setRemarks("Auto‑generated from " + current.getCode());
 
+        // Determine base start date for next cycle
+        LocalDate baseStart = null;
+
+        if (Boolean.TRUE.equals(current.getHasFruiting()) && current.getExpectedEndDate() != null) {
+            baseStart = current.getExpectedEndDate();
+        } else if (Boolean.TRUE.equals(current.getHasInoculation()) && current.getInoculationEndDate() != null) {
+            baseStart = current.getInoculationEndDate();
+        }
+
+        // If no base start, cannot clone dates
+        if (baseStart == null) {
+            repo.save(next);
+            return;
+        }
+
+        // Clone inoculation dates
+        if (Boolean.TRUE.equals(current.getHasInoculation())
+                && current.getInoculationStartDate() != null
+                && current.getInoculationEndDate() != null) {
+
+            long inocDays = ChronoUnit.DAYS.between(current.getInoculationStartDate(), current.getInoculationEndDate());
+            LocalDate inocStart = baseStart;
+            LocalDate inocEnd = inocStart.plusDays(inocDays);
+
+            next.setInoculationStartDate(inocStart);
+            next.setInoculationEndDate(inocEnd);
+
+            if (!Boolean.TRUE.equals(current.getHasFruiting())) {
+                next.setExpectedEndDate(inocEnd);
+            }
+        }
+
+        // Clone fruiting dates
+        if (Boolean.TRUE.equals(current.getHasFruiting())
+                && current.getFruitingStartDate() != null
+                && current.getExpectedEndDate() != null) {
+
+            long fruitDays = ChronoUnit.DAYS.between(current.getFruitingStartDate(), current.getExpectedEndDate());
+            LocalDate fruitStart = Boolean.TRUE.equals(current.getHasInoculation()) && next.getInoculationEndDate() != null
+                    ? next.getInoculationEndDate()
+                    : baseStart;
+
+            LocalDate fruitEnd = fruitStart.plusDays(fruitDays);
+            next.setFruitingStartDate(fruitStart);
+            next.setExpectedEndDate(fruitEnd);
+        }
+
         repo.save(next);
     }
-} 
+}

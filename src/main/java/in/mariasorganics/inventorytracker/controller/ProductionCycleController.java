@@ -72,6 +72,34 @@ public class ProductionCycleController {
 
         boolean isNewOrActivated = cycle.getId() == null || "ACTIVE".equalsIgnoreCase(cycle.getStatus());
 
+        // Ensure GrowRoom is managed
+        if (cycle.getGrowRoom() != null && cycle.getGrowRoom().getId() != null) {
+            growRoomService.findById(cycle.getGrowRoom().getId())
+                    .ifPresent(cycle::setGrowRoom);
+        } else {
+            cycle.setGrowRoom(null);
+        }
+
+        // Ensure FruitingRoom is managed
+        if (cycle.getFruitingRoom() != null && cycle.getFruitingRoom().getId() != null) {
+            growRoomService.findById(cycle.getFruitingRoom().getId())
+                    .ifPresent(cycle::setFruitingRoom);
+        } else {
+            cycle.setFruitingRoom(null);
+        }
+
+        // Explicitly clear inoculation dates if disabled
+        if (Boolean.FALSE.equals(cycle.getHasInoculation())) {
+            cycle.setInoculationStartDate(null);
+            cycle.setInoculationEndDate(null);
+        }
+
+        // Explicitly clear fruiting dates if disabled
+        if (Boolean.FALSE.equals(cycle.getHasFruiting())) {
+            cycle.setFruitingStartDate(null);
+            cycle.setExpectedEndDate(null);
+        }
+
         ProductionCycle saved = cycleService.save(cycle);
 
         if (isNewOrActivated && planNext) {

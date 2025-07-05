@@ -2,93 +2,106 @@
 <html xmlns:th="http://www.thymeleaf.org"
       th:replace="layout/layout :: layout (~{::body}, ~{::title})">
 <head>
-  <title>Production Cycle Form</title>
+  <title>Production Cycle Form</title>
 </head>
 
 <body>
 <div class="card">
-  <!-- ── Header ─────────────────────────────────────── -->
   <div class="card-header bg-success text-white">
-    <h4 th:text="${#strings.isEmpty(cycle.id) ? 'Add New Production Cycle'
-                                              : 'Edit Production Cycle'}">
-      Cycle Form
+    <h4 th:text="${#strings.isEmpty(cycle.id) ? 'Add New Production Cycle' : 'Edit Production Cycle'}">
+      Cycle Form
     </h4>
   </div>
 
-  <!-- ── Body / Form ────────────────────────────────── -->
   <div class="card-body">
     <form th:action="@{/cycles/save}" th:object="${cycle}" method="post">
       <input type="hidden" th:field="*{id}"/>
 
-      <!-- Code -->
       <div class="mb-3">
-        <label class="form-label">Cycle Code</label>
-        <input type="text" th:field="*{code}" class="form-control"
-               placeholder="GR1_CYCLE_001" required/>
+        <label class="form-label">Cycle Code</label>
+        <input type="text" th:field="*{code}" class="form-control" placeholder="GR1_CYCLE_001" required/>
       </div>
 
-      <!-- Grow Room -->
       <div class="mb-3">
-        <label class="form-label">Grow Room</label>
-        <select th:field="*{growRoom.id}" class="form-select">
-          <option th:each="room : ${growRooms}"
-                  th:value="${room.id}"
-                  th:text="${room.name}">Room</option>
+        <label class="form-label">Grow Room</label>
+        <select th:field="*{growRoom.id}" class="form-select" required>
+          <option th:each="room : ${growRooms}" th:value="${room.id}" th:text="${room.name}">Room</option>
         </select>
       </div>
 
-      <!-- Inoculation Phase -->
+      <div class="mb-3">
+        <label class="form-label">Fruiting Room (optional)</label>
+        <select th:field="*{fruitingRoom.id}" class="form-select">
+          <option value="">-- Same as Inoculation Room --</option>
+          <option th:each="room : ${growRooms}" th:value="${room.id}" th:text="${room.name}"></option>
+        </select>
+      </div>
+
+      <!-- Toggles with hidden inputs -->
       <div class="row mb-3">
         <div class="col">
-          <label class="form-label">Inoculation Start</label>
-          <input type="date" id="inocStart" name="inoculationStartDate"
-                 class="form-control" onchange="calcDates()" required
-                 th:value="${cycle.inoculationStartDate != null ?
-                           #temporals.format(cycle.inoculationStartDate,'yyyy-MM-dd') : ''}"/>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="inocToggle"
+                   th:checked="${cycle.hasInoculation}" onchange="toggleInocSection(); syncToggleState();" />
+            <label class="form-check-label" for="inocToggle">Enable Inoculation Phase</label>
+            <input type="hidden" th:field="*{hasInoculation}" id="hiddenInoc" />
+          </div>
         </div>
         <div class="col">
-          <label class="form-label">Inoculation Days</label>
-          <input type="number" id="inocDays" name="inoculationDays"
-                 class="form-control" min="1" oninput="calcDates()" required/>
-        </div>
-        <div class="col">
-          <label class="form-label">Inoculation End</label>
-          <input type="date" id="inocEnd" name="inoculationEndDate"
-                 class="form-control" readonly
-                 th:value="${cycle.inoculationEndDate != null ?
-                           #temporals.format(cycle.inoculationEndDate,'yyyy-MM-dd') : ''}"/>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="fruitToggle"
+                   th:checked="${cycle.hasFruiting}" onchange="toggleFruitSection(); syncToggleState();" />
+            <label class="form-check-label" for="fruitToggle">Enable Fruiting Phase</label>
+            <input type="hidden" th:field="*{hasFruiting}" id="hiddenFruit" />
+          </div>
         </div>
       </div>
 
-      <!-- Fruiting Phase -->
-      <div class="row mb-3">
-        <div class="col">
-          <label class="form-label">Fruiting Start</label>
-          <input type="date" id="fruitStart" name="fruitingStartDate"
-                 class="form-control" onchange="calcDates()" required
-                 th:value="${cycle.fruitingStartDate != null ?
-                           #temporals.format(cycle.fruitingStartDate,'yyyy-MM-dd') : ''}"/>
+      <!-- Inoculation -->
+      <div id="inocSection">
+        <div class="row mb-3">
+          <div class="col">
+            <label class="form-label">Inoculation Start</label>
+            <input type="date" id="inocStart" name="inoculationStartDate" class="form-control" onchange="calcDates()"
+                   th:value="${cycle.inoculationStartDate != null ? #temporals.format(cycle.inoculationStartDate,'yyyy-MM-dd') : ''}"/>
+          </div>
+          <div class="col">
+            <label class="form-label">Inoculation Days</label>
+            <input type="number" id="inocDays" name="inoculationDays" class="form-control" min="1" oninput="calcDates()"/>
+          </div>
+          <div class="col">
+            <label class="form-label">Inoculation End</label>
+            <input type="date" id="inocEnd" name="inoculationEndDate" class="form-control" readonly
+                   th:value="${cycle.inoculationEndDate != null ? #temporals.format(cycle.inoculationEndDate,'yyyy-MM-dd') : ''}"/>
+          </div>
         </div>
-        <div class="col">
-          <label class="form-label">Fruiting Days</label>
-          <input type="number" id="fruitDays" name="fruitingDays"
-                 class="form-control" min="1" oninput="calcDates()" required/>
-        </div>
-        <div class="col">
-          <label class="form-label">Fruiting End</label>
-          <input type="date" id="fruitEnd" name="expectedEndDate"
-                 class="form-control" readonly
-                 th:value="${cycle.expectedEndDate != null ?
-                           #temporals.format(cycle.expectedEndDate,'yyyy-MM-dd') : ''}"/>
+      </div>
+
+      <!-- Fruiting -->
+      <div id="fruitSection">
+        <div class="row mb-3">
+          <div class="col">
+            <label class="form-label">Fruiting Start</label>
+            <input type="date" id="fruitStart" name="fruitingStartDate" class="form-control" onchange="calcDates()"
+                   th:value="${cycle.fruitingStartDate != null ? #temporals.format(cycle.fruitingStartDate,'yyyy-MM-dd') : ''}"/>
+          </div>
+          <div class="col">
+            <label class="form-label">Fruiting Days</label>
+            <input type="number" id="fruitDays" name="fruitingDays" class="form-control" min="1" oninput="calcDates()"/>
+          </div>
+          <div class="col">
+            <label class="form-label">Fruiting End</label>
+            <input type="date" id="fruitEnd" name="expectedEndDate" class="form-control" readonly
+                   th:value="${cycle.expectedEndDate != null ? #temporals.format(cycle.expectedEndDate,'yyyy-MM-dd') : ''}"/>
+          </div>
         </div>
       </div>
 
       <!-- Status -->
       <div class="mb-3">
         <label class="form-label">Status</label>
-        <select th:field="*{status}" id="statusSel" class="form-select" required
-                onchange="togglePlanNext()">
-          <option value="" disabled>Select Status</option>
+        <select th:field="*{status}" id="statusSel" class="form-select" required onchange="togglePlanNext()">
+          <option value="" disabled>Select Status</option>
           <option value="PLANNED">PLANNED</option>
           <option value="ACTIVE">ACTIVE</option>
           <option value="COMPLETED">COMPLETED</option>
@@ -96,13 +109,10 @@
         </select>
       </div>
 
-      <!-- Plan‑next checkbox (hidden unless status = ACTIVE) -->
+      <!-- Plan next -->
       <div class="form-check mb-3 d-none" id="planNextWrapper">
-        <input class="form-check-input" type="checkbox"
-               id="planNext" name="planNext"/>
-        <label class="form-check-label" for="planNext">
-          📅 Also plan the next cycle automatically
-        </label>
+        <input class="form-check-input" type="checkbox" id="planNext" name="planNext"/>
+        <label class="form-check-label" for="planNext">📅 Also plan the next cycle automatically</label>
       </div>
 
       <!-- Remarks -->
@@ -111,71 +121,76 @@
         <textarea th:field="*{remarks}" class="form-control" rows="2"></textarea>
       </div>
 
-      <!-- Actions -->
       <div class="d-flex justify-content-between">
-        <a th:href="@{/cycles}" class="btn btn-secondary">← Back</a>
-        <button type="submit" class="btn btn-success">💾 Save Cycle</button>
+        <a th:href="@{/cycles}" class="btn btn-secondary">← Back</a>
+        <button type="submit" class="btn btn-success">💾 Save Cycle</button>
       </div>
     </form>
   </div>
 </div>
 
-<!-- ===== JavaScript ===== -->
+<!-- JavaScript -->
 <script>
-  /* --- helper to show/hide the “plan next” checkbox -------------------- */
   function togglePlanNext() {
-    const statusSel = document.getElementById('statusSel');
-    const boxWrap   = document.getElementById('planNextWrapper');
-    if (statusSel.value === 'ACTIVE') {
-      boxWrap.classList.remove('d-none');
-    } else {
-      boxWrap.classList.add('d-none');
-      document.getElementById('planNext').checked = false;
-    }
+    const box = document.getElementById('planNextWrapper');
+    const sel = document.getElementById('statusSel');
+    box.classList.toggle('d-none', sel.value !== 'ACTIVE');
   }
 
-  /* --- date helpers (unchanged) --------------------------------------- */
+  function toggleInocSection() {
+    const visible = document.getElementById('inocToggle').checked;
+    document.getElementById('inocSection').style.display = visible ? 'block' : 'none';
+  }
+
+  function toggleFruitSection() {
+    const visible = document.getElementById('fruitToggle').checked;
+    document.getElementById('fruitSection').style.display = visible ? 'block' : 'none';
+  }
+
+  function syncToggleState() {
+    document.getElementById('hiddenInoc').value = document.getElementById('inocToggle').checked;
+    document.getElementById('hiddenFruit').value = document.getElementById('fruitToggle').checked;
+  }
+
   function daysBetween(d1, d2) {
     return Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24));
   }
 
   function calcDates() {
     const inocStart = document.getElementById("inocStart");
-    const inocEnd   = document.getElementById("inocEnd");
-    const inocDays  = document.getElementById("inocDays");
-
+    const inocEnd = document.getElementById("inocEnd");
+    const inocDays = document.getElementById("inocDays");
     const fruitStart = document.getElementById("fruitStart");
-    const fruitEnd   = document.getElementById("fruitEnd");
-    const fruitDays  = document.getElementById("fruitDays");
+    const fruitEnd = document.getElementById("fruitEnd");
+    const fruitDays = document.getElementById("fruitDays");
 
-    /* ------- forward: start + days → end -------- */
     if (inocStart.value && inocDays.value) {
       const end = new Date(inocStart.value);
-      end.setDate(end.getDate() + parseInt(inocDays.value, 10));
+      end.setDate(end.getDate() + parseInt(inocDays.value));
       inocEnd.value = end.toISOString().split("T")[0];
-      if (!fruitStart.value) fruitStart.value = inocEnd.value;
     }
+
     if (fruitStart.value && fruitDays.value) {
       const end = new Date(fruitStart.value);
-      end.setDate(end.getDate() + parseInt(fruitDays.value, 10));
+      end.setDate(end.getDate() + parseInt(fruitDays.value));
       fruitEnd.value = end.toISOString().split("T")[0];
     }
 
-    /* ------- reverse: start + end → days -------- */
     if (inocStart.value && inocEnd.value && !inocDays.value) {
-      inocDays.value = daysBetween(new Date(inocStart.value),
-                                   new Date(inocEnd.value));
+      inocDays.value = daysBetween(new Date(inocStart.value), new Date(inocEnd.value));
     }
+
     if (fruitStart.value && fruitEnd.value && !fruitDays.value) {
-      fruitDays.value = daysBetween(new Date(fruitStart.value),
-                                    new Date(fruitEnd.value));
+      fruitDays.value = daysBetween(new Date(fruitStart.value), new Date(fruitEnd.value));
     }
   }
 
-  /* --- initialise on page load --------------------------------------- */
   window.addEventListener("DOMContentLoaded", () => {
-    calcDates();
     togglePlanNext();
+    toggleInocSection();
+    toggleFruitSection();
+    calcDates();
+    syncToggleState();
   });
 </script>
 </body>

@@ -9,7 +9,7 @@ import java.time.LocalDate;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = "growRoom")
+@ToString(exclude = {"growRoom", "fruitingRoom"})
 public class ProductionCycle {
 
     @Id
@@ -20,10 +20,15 @@ public class ProductionCycle {
     @JoinColumn(name = "grow_room_id", nullable = false)
     private GrowRoom growRoom;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "fruiting_room_id")
+    private GrowRoom fruitingRoom;
+
     private String code;
 
     private LocalDate inoculationStartDate;
     private LocalDate inoculationEndDate;
+
     private LocalDate fruitingStartDate;
     private LocalDate expectedEndDate;
 
@@ -31,6 +36,10 @@ public class ProductionCycle {
 
     private String remarks;
 
+    private Boolean hasInoculation = true;
+    private Boolean hasFruiting = true;
+
     @OneToOne(mappedBy = "cycle", cascade = CascadeType.ALL, orphanRemoval = true)
     private RawMaterialEstimate estimate;
 }
+
