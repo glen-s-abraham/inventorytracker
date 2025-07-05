@@ -126,9 +126,9 @@ public class ProductionCycleService implements IProductionCycleService {
             next.setInoculationStartDate(inocStart);
             next.setInoculationEndDate(inocEnd);
 
-            if (!Boolean.TRUE.equals(current.getHasFruiting())) {
-                next.setExpectedEndDate(inocEnd);
-            }
+            // if (!Boolean.TRUE.equals(current.getHasFruiting())) {
+            //     next.setExpectedEndDate(inocEnd);
+            // }
         }
 
         // Clone fruiting dates

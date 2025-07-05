@@ -1,154 +1,163 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      th:replace="layout/layout :: layout (~{::body}, ~{::title})">
+<html xmlns:th="http://www.thymeleaf.org" th:replace="layout/layout :: layout (~{::body}, ~{::title})">
 
 <head>
   <title>Production Cycles</title>
 </head>
 
 <body>
-<div class="container mt-4">
-  <h2>Production Cycle Planner</h2>
+  <div class="container mt-4">
+    <h2>Production Cycle Planner</h2>
 
-  <a class="btn btn-success mb-3" th:href="@{/cycles/new}">➕ Add New Cycle</a>
+    <a class="btn btn-success mb-3" th:href="@{/cycles/new}">➕ Add New Cycle</a>
 
-  <!-- Filter toggle -->
-  <button class="btn btn-outline-secondary mb-3" type="button" data-bs-toggle="collapse"
-          data-bs-target="#advancedCycleFilters">
-    🔍 Advanced Filters
-  </button>
+    <!-- Filter toggle -->
+    <button class="btn btn-outline-secondary mb-3" type="button" data-bs-toggle="collapse"
+      data-bs-target="#advancedCycleFilters">
+      🔍 Advanced Filters
+    </button>
 
-  <!-- Collapsible filters -->
-  <div class="collapse" id="advancedCycleFilters">
-    <div class="card card-body border-0 shadow-sm mb-4">
-      <form method="get" th:action="@{/cycles}" class="row g-3 align-items-end">
+    <!-- Collapsible filters -->
+    <div class="collapse" id="advancedCycleFilters">
+      <div class="card card-body border-0 shadow-sm mb-4">
+        <form method="get" th:action="@{/cycles}" class="row g-3 align-items-end">
 
-        <!-- Keyword -->
-        <div class="col-md-3 col-sm-6">
-          <label class="form-label">Search</label>
-          <input type="text" name="keyword" th:value="${keyword}" class="form-control"
-                 placeholder="Code / Remarks">
-        </div>
+          <!-- Keyword -->
+          <div class="col-md-3 col-sm-6">
+            <label class="form-label">Search</label>
+            <input type="text" name="keyword" th:value="${keyword}" class="form-control" placeholder="Code / Remarks">
+          </div>
 
-        <!-- Date From -->
-        <div class="col-md-2 col-sm-6">
-          <label class="form-label">Start From</label>
-          <input type="date" name="startFrom" th:value="${startFrom}" class="form-control">
-        </div>
+          <!-- Date From -->
+          <div class="col-md-2 col-sm-6">
+            <label class="form-label">Start From</label>
+            <input type="date" name="startFrom" th:value="${startFrom}" class="form-control">
+          </div>
 
-        <!-- Date To -->
-        <div class="col-md-2 col-sm-6">
-          <label class="form-label">Start To</label>
-          <input type="date" name="startTo" th:value="${startTo}" class="form-control">
-        </div>
+          <!-- Date To -->
+          <div class="col-md-2 col-sm-6">
+            <label class="form-label">Start To</label>
+            <input type="date" name="startTo" th:value="${startTo}" class="form-control">
+          </div>
 
-        <!-- Status -->
-        <div class="col-md-2 col-sm-6">
-          <label class="form-label">Status</label>
-          <select name="status" class="form-select">
-            <option value="">All</option>
-            <option th:each="st : ${T(java.util.List).of('PLANNED','ACTIVE','COMPLETED','CANCELLED')}"
-                    th:value="${st}" th:selected="${status == st}" th:text="${st}"></option>
-          </select>
-        </div>
+          <!-- Status -->
+          <div class="col-md-2 col-sm-6">
+            <label class="form-label">Status</label>
+            <select name="status" class="form-select">
+              <option value="">All</option>
+              <option th:each="st : ${T(java.util.List).of('PLANNED','ACTIVE','COMPLETED','CANCELLED')}"
+                th:value="${st}" th:selected="${status == st}" th:text="${st}"></option>
+            </select>
+          </div>
 
-        <!-- GrowRoom -->
-        <div class="col-md-2 col-sm-6">
-          <label class="form-label">Grow Room</label>
-          <select name="growRoomId" class="form-select">
-            <option value="">All</option>
-            <option th:each="gr : ${growRooms}"
-                    th:value="${gr.id}" th:selected="${growRoomId == gr.id}" th:text="${gr.name}"></option>
-          </select>
-        </div>
+          <!-- GrowRoom -->
+          <div class="col-md-2 col-sm-6">
+            <label class="form-label">Grow Room</label>
+            <select name="growRoomId" class="form-select">
+              <option value="">All</option>
+              <option th:each="gr : ${growRooms}" th:value="${gr.id}" th:selected="${growRoomId == gr.id}"
+                th:text="${gr.name}"></option>
+            </select>
+          </div>
 
-        <!-- Sort Field -->
-        <div class="col-md-2 col-sm-6">
-          <label class="form-label">Sort By</label>
-          <select name="sortField" class="form-select">
-            <option value="inoculationStartDate"  th:selected="${sortField == 'inoculationStartDate'}">Inoc Start</option>
-            <option value="inoculationEndDate"    th:selected="${sortField == 'inoculationEndDate'}">Inoc End</option>
-            <option value="fruitingStartDate"      th:selected="${sortField == 'fruitingStartDate'}">Fruit Start</option>
-            <option value="expectedEndDate"        th:selected="${sortField == 'expectedEndDate'}">Fruit End</option>
-            <option value="code"                   th:selected="${sortField == 'code'}">Code</option>
-            <option value="status"                 th:selected="${sortField == 'status'}">Status</option>
-          </select>
-        </div>
+          <!-- Sort Field -->
+          <div class="col-md-2 col-sm-6">
+            <label class="form-label">Sort By</label>
+            <select name="sortField" class="form-select">
+              <option value="inoculationStartDate" th:selected="${sortField == 'inoculationStartDate'}">Inoc Start
+              </option>
+              <option value="inoculationEndDate" th:selected="${sortField == 'inoculationEndDate'}">Inoc End</option>
+              <option value="fruitingStartDate" th:selected="${sortField == 'fruitingStartDate'}">Fruit Start</option>
+              <option value="expectedEndDate" th:selected="${sortField == 'expectedEndDate'}">Fruit End</option>
+              <option value="code" th:selected="${sortField == 'code'}">Code</option>
+              <option value="status" th:selected="${sortField == 'status'}">Status</option>
+            </select>
+          </div>
 
-        <!-- Sort Dir -->
-        <div class="col-md-1 col-sm-6">
-          <label class="form-label">Order</label>
-          <select name="sortDir" class="form-select">
-            <option value="asc"  th:selected="${sortDir == 'asc'}">Asc</option>
-            <option value="desc" th:selected="${sortDir == 'desc'}">Desc</option>
-          </select>
-        </div>
+          <!-- Sort Dir -->
+          <div class="col-md-1 col-sm-6">
+            <label class="form-label">Order</label>
+            <select name="sortDir" class="form-select">
+              <option value="asc" th:selected="${sortDir == 'asc'}">Asc</option>
+              <option value="desc" th:selected="${sortDir == 'desc'}">Desc</option>
+            </select>
+          </div>
 
-        <!-- Submit -->
-        <div class="col-md-2 col-sm-12">
-          <button type="submit" class="btn btn-primary w-100 mt-2">Filter</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Table -->
-  <table class="table table-bordered table-striped">
-    <thead class="table-light">
-    <tr>
-      <th>ID</th>
-      <th>Code</th>
-      <th>Grow Room</th>
-      <th>Inoc Start</th>
-      <th>Inoc End</th>
-      <th>Fruit Start</th>
-      <th>Fruit End</th>
-      <th>Status</th>
-      <th>Remarks</th>
-      <th>Actions</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="cy : ${cyclePage.content}">
-      <td th:text="${cy.id}">ID</td>
-      <td th:text="${cy.code}">Code</td>
-      <td th:text="${cy.growRoom.name}">Room</td>
-      <td th:text="${cy.inoculationStartDate  != null ? #temporals.format(cy.inoculationStartDate,'dd-MM-yyyy') : ''}"></td>
-      <td th:text="${cy.inoculationEndDate    != null ? #temporals.format(cy.inoculationEndDate,'dd-MM-yyyy')   : ''}"></td>
-      <td th:text="${cy.fruitingStartDate      != null ? #temporals.format(cy.fruitingStartDate,'dd-MM-yyyy')     : ''}"></td>
-      <td th:text="${cy.expectedEndDate        != null ? #temporals.format(cy.expectedEndDate,'dd-MM-yyyy')       : ''}"></td>
-      <td th:text="${cy.status}"></td>
-      <td th:text="${cy.remarks}"></td>
-      <td>
-        <a th:href="@{/cycles/edit/{id}(id=${cy.id})}" class="btn btn-sm btn-primary">Edit</a>
-        <form th:action="@{/cycles/delete/{id}(id=${cy.id})}" method="post" style="display:inline">
-          <button class="btn btn-sm btn-danger"
-                  onclick="return confirm('Delete this cycle?')">Delete</button>
+          <!-- Submit -->
+          <div class="col-md-2 col-sm-12">
+            <button type="submit" class="btn btn-primary w-100 mt-2">Filter</button>
+          </div>
         </form>
-      </td>
-    </tr>
-    </tbody>
-  </table>
+      </div>
+    </div>
 
-  <!-- Pagination -->
-  <nav>
-    <ul class="pagination">
-      <li class="page-item" th:classappend="${cyclePage.first} ? 'disabled'">
-        <a class="page-link"
-           th:href="@{'/cycles'(page=${cyclePage.number-1},size=${cyclePage.size})}">Previous</a>
-      </li>
-      <li class="page-item disabled">
-        <span class="page-link">
-          Page <span th:text="${cyclePage.number+1}">1</span> of
-          <span th:text="${cyclePage.totalPages}">1</span>
-        </span>
-      </li>
-      <li class="page-item" th:classappend="${cyclePage.last} ? 'disabled'">
-        <a class="page-link"
-           th:href="@{'/cycles'(page=${cyclePage.number+1},size=${cyclePage.size})}">Next</a>
-      </li>
-    </ul>
-  </nav>
-</div>
+    <!-- Table -->
+    <table class="table table-bordered table-striped">
+      <thead class="table-light">
+        <tr>
+          <th>ID</th>
+          <th>Code</th>
+          <th>Grow Room</th>
+          <th>Inoc Start</th>
+          <th>Inoc End</th>
+          <th>Fruit Start</th>
+          <th>Fruit End</th>
+          <th>Status</th>
+          <th>Remarks</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr th:each="cy : ${cyclePage.content}">
+          <td th:text="${cy.id}">ID</td>
+          <td th:text="${cy.code}">Code</td>
+          <td th:text="${cy.growRoom.name}">Room</td>
+          <td
+            th:text="${cy.inoculationStartDate  != null ? #temporals.format(cy.inoculationStartDate,'dd-MM-yyyy') : ''}">
+          </td>
+          <td
+            th:text="${cy.inoculationEndDate    != null ? #temporals.format(cy.inoculationEndDate,'dd-MM-yyyy')   : ''}">
+          </td>
+          <td
+            th:text="${cy.fruitingStartDate      != null ? #temporals.format(cy.fruitingStartDate,'dd-MM-yyyy')     : ''}">
+          </td>
+          <td
+            th:text="${cy.expectedEndDate        != null ? #temporals.format(cy.expectedEndDate,'dd-MM-yyyy')       : ''}">
+          </td>
+          <td th:text="${cy.status}"></td>
+          <td th:text="${cy.remarks}"></td>
+          <td class="d-flex gap-1">
+            <a th:href="@{/cycles/edit/{id}(id=${cy.id})}" class="btn btn-sm btn-primary">✏️ Edit</a>
+            <a th:href="@{/cycles/clone/{id}(id=${cy.id})}" class="btn btn-sm btn-warning">🧬 Clone</a>
+            <form th:action="@{/cycles/delete/{id}(id=${cy.id})}" method="post"
+              onsubmit="return confirm('Delete this cycle?')">
+              <button class="btn btn-sm btn-danger">🗑️ Delete</button>
+            </form>
+          </td>
+
+
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Pagination -->
+    <nav>
+      <ul class="pagination">
+        <li class="page-item" th:classappend="${cyclePage.first} ? 'disabled'">
+          <a class="page-link" th:href="@{'/cycles'(page=${cyclePage.number-1},size=${cyclePage.size})}">Previous</a>
+        </li>
+        <li class="page-item disabled">
+          <span class="page-link">
+            Page <span th:text="${cyclePage.number+1}">1</span> of
+            <span th:text="${cyclePage.totalPages}">1</span>
+          </span>
+        </li>
+        <li class="page-item" th:classappend="${cyclePage.last} ? 'disabled'">
+          <a class="page-link" th:href="@{'/cycles'(page=${cyclePage.number+1},size=${cyclePage.size})}">Next</a>
+        </li>
+      </ul>
+    </nav>
+  </div>
 </body>
+
 </html>

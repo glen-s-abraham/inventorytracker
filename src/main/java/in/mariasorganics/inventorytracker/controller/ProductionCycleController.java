@@ -114,4 +114,11 @@ public class ProductionCycleController {
         cycleService.deleteById(id);
         return "redirect:/cycles";
     }
+
+    @GetMapping("/clone/{id}")
+    public String clone(@PathVariable Long id) {
+        cycleService.findById(id).ifPresent(cycleService::planNextCycle);
+        return "redirect:/cycles";
+    }
+
 }
